@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	"monkey/ast"
 	"monkey/lexer"
 	"monkey/token"
@@ -10,10 +11,14 @@ type Parser struct {
 	l         *lexer.Lexer
 	curToken  token.Token
 	peekToken token.Token
+	errors    []string
 }
 
 func New(l *lexer.Lexer) *Parser {
-	p := &Parser{l: l}
+	p := &Parser{
+		l:      l,
+		errors: []string{},
+	}
 	p.nextToken()
 	p.nextToken()
 	return p
@@ -28,8 +33,8 @@ func (p *Parser) ParseProgram() *ast.Program {
 	program := &ast.Program{}
 	program.Statements = []ast.Statement{}
 	for p.curToken.Type != token.EOF {
-		stmt := p.parseStatement()
-		if stmt != nil {
+		stmt, ok := p.parseStatement()
+		if ok {
 			program.Statements = append(program.Statements, stmt)
 		}
 		p.nextToken()
@@ -37,24 +42,33 @@ func (p *Parser) ParseProgram() *ast.Program {
 	return program
 }
 
-func (p *Parser) parseStatement() ast.Statement {
+func (p *Parser) Errors() []string {
+	return p.errors
+}
+
+func (p *Parser) parseStatement() (ast.Statement, bool) {
 	switch p.curToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
 	default:
-		return nil
+		return nil, false
 	}
 }
 
-func (p *Parser) parseLetStatement() *ast.LetStatement {
+func (p *Parser) peekError(t token.TokenType) {
+	mesg := fmt.Sprintf("expected next token to be %s, got %s", t, p.peekToken.Type)
+	p.errors = append(p.errors, mesg)
+}
+
+func (p *Parser) parseLetStatement() (*ast.LetStatement, bool) {
 	stmt := &ast.LetStatement{Token: p.curToken}
 
 	if !p.expectPeek(token.IDENT) {
-		return nil
+		return nil, false
 	}
 	stmt.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 	if !p.expectPeek(token.ASSIGN) {
-		return nil
+		return nil, false
 	}
 
 	// TODO: We're skipping the expressions until we encounter a semicolon
@@ -63,7 +77,7 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		p.nextToken()
 	}
 
-	return stmt
+	return stmt, true
 }
 
 func (p *Parser) curTokenIs(t token.TokenType) bool {
@@ -79,5 +93,6 @@ func (p *Parser) expectPeek(t token.TokenType) bool {
 		p.nextToken()
 		return true
 	}
+	p.peekError(t)
 	return false
 }

@@ -10,7 +10,7 @@ func TestLetStatements(t *testing.T) {
 	input := `
 let x = 5;
 let y = 10;
- let foobar = 838383;
+let foobar = 838383;
 `
 
 	l := lexer.New(input)
@@ -22,7 +22,8 @@ let y = 10;
 	}
 
 	if len(program.Statements) != 3 {
-		t.Fatalf("program.Statements does not contain 3 statements, got %d instead", len(program.Statements))
+		t.Errorf("program.Statements does not contain 3 statements, got %d instead", len(program.Statements))
+		checkParserErrors(t, p)
 	}
 
 	tests := []struct {
@@ -61,4 +62,16 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	}
 
 	return true
+}
+
+func checkParserErrors(t *testing.T, p *Parser) {
+	errors := p.Errors()
+	if len(errors) == 0 {
+		return
+	}
+	t.Errorf("parser has %d errors", len(errors))
+	for _, mesg := range errors {
+		t.Errorf("Parser error: %q", mesg)
+	}
+	t.FailNow()
 }
