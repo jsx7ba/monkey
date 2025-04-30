@@ -114,8 +114,8 @@ func (p *Parser) parseStatement() (ast.Statement, bool) {
 	switch p.curToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
-	//case token.RETURN:
-	//	return p.parseReturnStatement()
+	case token.RETURN:
+		return p.parseReturnStatement()
 	default:
 		return p.parseExpressionStatement()
 	}
@@ -151,7 +151,8 @@ func (p *Parser) parseLetStatement() (*ast.LetStatement, bool) {
 		return nil, false
 	}
 
-	// TODO: We're skipping the expressions until we encounter a semicolon
+	p.nextToken()
+	stmt.Value = p.parseExpression(LOWEST)
 
 	for !p.curTokenIs(token.SEMICOLON) {
 		p.nextToken()
@@ -371,4 +372,17 @@ func (p *Parser) parseCallArguments() []ast.Expression {
 	}
 
 	return args
+}
+
+func (p *Parser) parseReturnStatement() (*ast.ReturnStatement, bool) {
+	stmt := &ast.ReturnStatement{Token: p.curToken}
+	p.nextToken()
+
+	stmt.ReturnValue = p.parseExpression(LOWEST)
+
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt, true
 }
