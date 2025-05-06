@@ -12,22 +12,22 @@ var (
 )
 
 func Eval(node ast.Node) object.Object {
-	switch node := node.(type) {
+	switch n := node.(type) {
 	case *ast.InfixExpression:
-		right := Eval(node.Right)
-		left := Eval(node.Left)
-		return evalInfixExpression(node.Operator, right, left)
+		left := Eval(n.Left)
+		right := Eval(n.Right)
+		return evalInfixExpression(n.Operator, left, right)
 	case *ast.PrefixExpression:
-		right := Eval(node.Right)
-		return evalPrefixExpression(node.Operator, right)
+		right := Eval(n.Right)
+		return evalPrefixExpression(n.Operator, right)
 	case *ast.Program:
-		return evalStatements(node.Statements)
+		return evalStatements(n.Statements)
 	case *ast.ExpressionStatement:
-		return Eval(node.Expression)
+		return Eval(n.Expression)
 	case *ast.IntegerLiteral:
-		return &object.Integer{Value: node.Value}
+		return &object.Integer{Value: n.Value}
 	case *ast.Boolean:
-		return nativeBoolToBoolObject(node.Value)
+		return nativeBoolToBoolObject(n.Value)
 	}
 	return nil
 }
@@ -36,12 +36,20 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 	switch {
 	case left.Type() == object.INTEGER_OBJ && right.Type() == object.INTEGER_OBJ:
 		return evalIntegerInfixExpression(operator, left, right)
+	case operator == "==":
+		leftBool := left.(*object.Boolean).Value
+		rightBool := right.(*object.Boolean).Value
+		return &object.Boolean{Value: leftBool == rightBool}
+	case operator == "!=":
+		leftBool := left.(*object.Boolean).Value
+		rightBool := right.(*object.Boolean).Value
+		return &object.Boolean{Value: leftBool != rightBool}
 	default:
 		return NULL
 	}
 }
 
-func evalIntegerInfixExpression(operator string, right, left object.Object) object.Object {
+func evalIntegerInfixExpression(operator string, left, right object.Object) object.Object {
 	leftVal := left.(*object.Integer).Value
 	rightVal := right.(*object.Integer).Value
 	switch operator {
@@ -53,6 +61,14 @@ func evalIntegerInfixExpression(operator string, right, left object.Object) obje
 		return &object.Integer{Value: leftVal * rightVal}
 	case "/":
 		return &object.Integer{Value: leftVal / rightVal}
+	case "<":
+		return &object.Boolean{Value: leftVal < rightVal}
+	case ">":
+		return &object.Boolean{Value: leftVal > rightVal}
+	case "==":
+		return &object.Boolean{Value: leftVal == rightVal}
+	case "!=":
+		return &object.Boolean{Value: leftVal != rightVal}
 	default:
 		return NULL
 	}
