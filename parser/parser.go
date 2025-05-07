@@ -224,6 +224,10 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	expression.Consequence = p.parseBlockStatement()
 
+	if !p.expectPeek(token.EOF) && p.expectPeek(token.ELSE) {
+		expression.Alternative = p.parseBlockStatement()
+	}
+
 	return expression
 }
 
