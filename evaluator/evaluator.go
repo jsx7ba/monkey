@@ -28,6 +28,10 @@ func Eval(node ast.Node) object.Object {
 		return &object.Integer{Value: n.Value}
 	case *ast.Boolean:
 		return nativeBoolToBoolObject(n.Value)
+	case *ast.BlockStatement:
+		return evalStatements(n.Statements)
+	case *ast.IfExpression:
+		return evalIfExpression(n)
 	}
 	return nil
 }
@@ -39,11 +43,17 @@ func evalInfixExpression(operator string, left, right object.Object) object.Obje
 	case operator == "==":
 		leftBool := left.(*object.Boolean).Value
 		rightBool := right.(*object.Boolean).Value
-		return &object.Boolean{Value: leftBool == rightBool}
+		if leftBool == rightBool {
+			return TRUE
+		}
+		return FALSE
 	case operator == "!=":
 		leftBool := left.(*object.Boolean).Value
 		rightBool := right.(*object.Boolean).Value
-		return &object.Boolean{Value: leftBool != rightBool}
+		if leftBool != rightBool {
+			return TRUE
+		}
+		return FALSE
 	default:
 		return NULL
 	}
@@ -62,13 +72,25 @@ func evalIntegerInfixExpression(operator string, left, right object.Object) obje
 	case "/":
 		return &object.Integer{Value: leftVal / rightVal}
 	case "<":
-		return &object.Boolean{Value: leftVal < rightVal}
+		if leftVal < rightVal {
+			return TRUE
+		}
+		return FALSE
 	case ">":
-		return &object.Boolean{Value: leftVal > rightVal}
+		if leftVal > rightVal {
+			return TRUE
+		}
+		return FALSE
 	case "==":
-		return &object.Boolean{Value: leftVal == rightVal}
+		if leftVal == rightVal {
+			return TRUE
+		}
+		return FALSE
 	case "!=":
-		return &object.Boolean{Value: leftVal != rightVal}
+		if leftVal != rightVal {
+			return TRUE
+		}
+		return FALSE
 	default:
 		return NULL
 	}
@@ -119,4 +141,24 @@ func evalStatements(stmts []ast.Statement) object.Object {
 		result = Eval(statement)
 	}
 	return result
+}
+
+func evalIfExpression(ie *ast.IfExpression) object.Object {
+	condition := Eval(ie.Condition)
+	if isTruthy(condition) {
+		return Eval(ie.Consequence)
+	} else if ie.Alternative != nil {
+		return Eval(ie.Alternative)
+	}
+	return NULL
+}
+
+func isTruthy(obj object.Object) bool {
+	switch obj {
+	case NULL, FALSE:
+		return false
+	case TRUE:
+		return true
+	}
+	return true
 }
