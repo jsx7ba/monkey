@@ -170,3 +170,31 @@ return 1;
 		testIntegerObject(tt.input, t, evaluated, tt.expected)
 	}
 }
+
+func TestErrorHandling(t *testing.T) {
+	tests := []struct {
+		input           string
+		expectedMessage string
+	}{
+		{"5 + true;", "type mismatch: INTEGER + BOOLEAN"},
+		{"5 + true; 5", "type mismatch: INTEGER + BOOLEAN"},
+		{"-true", "unknown operator: -BOOLEAN"},
+		{"true + false", "type mismatch: BOOLEAN + BOOLEAN"},
+		{"5; true + false; 5;", "type mismatch: BOOLEAN + BOOLEAN"},
+		{"if (10 > 1) { true + false; }", "type mismatch: BOOLEAN + BOOLEAN"},
+		{"if (10 > 1) {if (10 > 1) { return true + false; }}", "type mismatch: BOOLEAN + BOOLEAN"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		errObj, ok := evaluated.(*object.Error)
+		if !ok {
+			t.Errorf("[%s]: no error object returnd, got=%T(%+v)", tt.input, evaluated, evaluated)
+			continue
+		}
+
+		if errObj.Message != tt.expectedMessage {
+			t.Errorf("[%s]: wrong error message. expsected=%q, got=%q", tt.input, tt.expectedMessage, errObj.Message)
+		}
+	}
+}
