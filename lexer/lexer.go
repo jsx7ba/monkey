@@ -74,7 +74,9 @@ func (l *Lexer) NextToken() token.Token {
 		tok = newToken(token.LT, l.ch)
 	case '>':
 		tok = newToken(token.GT, l.ch)
-
+	case '"':
+		tok.Type = token.STRING
+		tok.Literal = l.readString()
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
@@ -140,4 +142,16 @@ func (l *Lexer) skipWhitespace() {
 	for l.ch == ' ' || l.ch == '\t' || l.ch == '\r' || l.ch == '\n' {
 		l.readChar()
 	}
+}
+
+func (l *Lexer) readString() string {
+	start := l.position + 1 // add one to move past the beginning double quote
+	for {
+		l.readChar()
+		if l.ch == '"' || l.ch == 0 {
+			break
+		}
+	}
+
+	return l.input[start:l.position]
 }
