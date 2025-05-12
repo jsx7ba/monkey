@@ -53,6 +53,35 @@ func testIntegerObject(input string, t *testing.T, obj object.Object, expected i
 	return true
 }
 
+func testIntegerArray(input string, t *testing.T, obj object.Object, expected []int64) bool {
+	result, ok := obj.(*object.Array)
+	if !ok {
+		t.Errorf("[%s] object is not Array, got=%T(%+v)", input, obj, obj)
+		return false
+	}
+
+	expectedLen := len(expected)
+	actualLen := len(result.Elements)
+	if expectedLen != actualLen {
+		t.Errorf("[%s] array does not have exected element count.  got=%d, expected=%d", input, actualLen, expectedLen)
+		return false
+	}
+	for i := 0; i != expectedLen; i++ {
+		if result.Elements[i].Type() != object.INTEGER_OBJ {
+			t.Errorf("[%s] element has wrong type at index %d, got=%T(%+v)", input, i, result.Elements[i], result.Elements[i])
+			return false
+		}
+		intObj := result.Elements[i].(*object.Integer)
+
+		if intObj.Value != expected[i] {
+			t.Errorf("[%s] element has wrong value at index %d, got=%T(%+v)", input, i, intObj.Value, expected[i])
+			return false
+		}
+	}
+
+	return true
+}
+
 func TestEvalBooleanExpression(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -294,6 +323,21 @@ func TestBuiltinFunction(t *testing.T) {
 		{`len("Hello World")`, 11},
 		{`len(1)`, "argument to 'len' not supported, got INTEGER"},
 		{`len("one", "2")`, "wrong number of arguments. got=2, want=1"},
+		{`rest(["one"], "2")`, "wrong number of arguments. got=2, want=1"},
+		{`let x = [1,2,3]; push(x, 4);`, []int64{1, 2, 3, 4}},
+		{`push([1,2], 4, 5);`, "wrong number of arguments. got=3, want=2"},
+		{`push(1, [1,2]);`, "argument to `push` must be ARRAY, got INTEGER"},
+		{`let x = [1,2,3]; rest(x);`, []int64{2, 3}},
+		{"rest(1, 2, 3)", "wrong number of arguments. got=3, want=1"},
+		{"rest(1)", "argument to 'rest' must be an array, got INTEGER"},
+		{`let x = [1,2,3]; push(x, -5);`, []int64{1, 2, 3, -5}},
+		{`let x = [1,2,3]; len(x); x;`, []int64{1, 2, 3}},
+		{`let x = [1,2,3]; first(x);`, 1},
+		{`first(1);`, "argument to 'first' must be an array, got INTEGER"},
+		{`first([1], [2]);`, "wrong number of arguments. got=2, want=1"},
+		{`last([1, 2, 3]);`, 3},
+		{`last([1], [2]);`, "wrong number of arguments. got=2, want=1"},
+		{`last("foo");`, "argument to 'last' must be an array, got STRING"},
 	}
 
 	for _, tt := range tests {
@@ -301,6 +345,8 @@ func TestBuiltinFunction(t *testing.T) {
 		switch expected := tt.expected.(type) {
 		case int:
 			testIntegerObject(tt.input, t, evaluated, int64(expected))
+		case []int64:
+			testIntegerArray(tt.input, t, evaluated, expected)
 		case string:
 			errObj, ok := evaluated.(*object.Error)
 			if !ok {
