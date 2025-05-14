@@ -392,7 +392,7 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 }
 
 func TestIfExpression(t *testing.T) {
-	input := `if (x < y) { x }`
+	input := `if (x < y) { x } else { y }`
 
 	p := New(lexer.New(input))
 	program := p.ParseProgram()
@@ -429,8 +429,8 @@ func TestIfExpression(t *testing.T) {
 		return
 	}
 
-	if exp.Alternative != nil {
-		t.Errorf("exp.Alternative.Statements was not nil. got=%+v", exp.Alternative)
+	if exp.Alternative == nil {
+		t.Error("exp.Alternative.Statements is nil but should have statements.")
 	}
 }
 

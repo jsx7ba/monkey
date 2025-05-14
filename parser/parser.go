@@ -229,7 +229,8 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 	expression.Consequence = p.parseBlockStatement()
 
-	if !p.expectPeek(token.EOF) && p.expectPeek(token.ELSE) {
+	if p.expectPeek(token.ELSE) {
+		p.nextToken()
 		expression.Alternative = p.parseBlockStatement()
 	}
 
