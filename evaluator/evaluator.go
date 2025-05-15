@@ -301,11 +301,14 @@ func applyFunction(fn object.Object, args []object.Object) object.Object {
 		evaluated := Eval(fn.Body, extendedEnv)
 		return unwrapReturnValue(evaluated)
 	case *object.Builtin:
-		return fn.Fn(args...)
+		result := fn.Fn(args...)
+		if fn.Void {
+			return nil
+		}
+		return result
 	default:
 		return newError("not a function: %s", fn.Type())
 	}
-
 }
 
 func extendFunctionEnv(fn *object.Function, args []object.Object) *object.Environment {

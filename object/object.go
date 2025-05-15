@@ -142,7 +142,8 @@ func (s *String) HashKey() HashKey {
 
 type BuiltinFunction func(args ...Object) Object
 type Builtin struct {
-	Fn BuiltinFunction
+	Fn   BuiltinFunction
+	Void bool
 }
 
 func (b *Builtin) Type() ObjectType { return BUILTIN_OBJ }
