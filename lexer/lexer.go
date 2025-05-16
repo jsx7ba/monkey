@@ -10,10 +10,8 @@ import (
 )
 
 type Lexer struct {
-	reader       *bufio.Reader
-	position     int  // Current position in input (points to current char)
-	readPosition int  // current reading position in input (after current char)
-	ch           rune // current char under examination
+	reader *bufio.Reader
+	ch     rune // current char under examination
 }
 
 func NewFromString(input string) *Lexer {
