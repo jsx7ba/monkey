@@ -1,28 +1,43 @@
 package lexer
 
-import "monkey/token"
+import (
+	"bufio"
+	"errors"
+	"io"
+	"monkey/token"
+	"strings"
+	"unicode"
+)
 
 type Lexer struct {
-	input        string
+	reader       *bufio.Reader
 	position     int  // Current position in input (points to current char)
 	readPosition int  // current reading position in input (after current char)
-	ch           byte // current char under examination
+	ch           rune // current char under examination
 }
 
-func New(input string) *Lexer {
-	l := &Lexer{input: input}
+func NewFromString(input string) *Lexer {
+	strReader := strings.NewReader(input)
+	r := bufio.NewReader(strReader)
+	l := &Lexer{reader: r}
+	l.readChar()
+	return l
+}
+
+func NewFromReader(r io.Reader) *Lexer {
+	bufReader := bufio.NewReader(r)
+	l := &Lexer{reader: bufReader}
 	l.readChar()
 	return l
 }
 
 func (l *Lexer) readChar() {
-	if l.readPosition >= len(l.input) {
+	readRune, _, err := l.reader.ReadRune()
+	if errors.Is(err, io.EOF) {
 		l.ch = 0
 	} else {
-		l.ch = l.input[l.readPosition]
+		l.ch = readRune
 	}
-	l.position = l.readPosition
-	l.readPosition += 1
 }
 
 func (l *Lexer) NextToken() token.Token {
@@ -106,58 +121,62 @@ func (l *Lexer) NextToken() token.Token {
 	return tok
 }
 
-func (l *Lexer) peekChar() byte {
-	if l.readPosition >= len(l.input) {
+func (l *Lexer) peekChar() rune {
+	readRune, _, err := l.reader.ReadRune()
+	if err != nil {
 		return 0
 	}
-	return l.input[l.readPosition]
+	l.reader.UnreadRune()
+	return readRune
 }
 
 func (l *Lexer) readIdentifier() string {
-	position := l.position
+	buffer := make([]rune, 0)
 	for isLetter(l.ch) {
+		buffer = append(buffer, l.ch)
 		l.readChar()
 	}
-	return l.input[position:l.position]
+	return string(buffer)
 }
 
 func (l *Lexer) readNumber() string {
-	position := l.position
+	buffer := make([]rune, 0)
 	for isDigit(l.ch) {
+		buffer = append(buffer, l.ch)
 		l.readChar()
 	}
-	return l.input[position:l.position]
+	return string(buffer)
 }
 
-func newToken(t token.TokenType, b byte) token.Token {
+func newToken(t token.TokenType, b rune) token.Token {
 	return token.Token{
 		Type:    t,
 		Literal: string(b),
 	}
 }
 
-func isLetter(b byte) bool {
-	return b >= 65 && b <= 90 || b >= 97 && b <= 122 || b == '_'
+func isLetter(b rune) bool {
+	return unicode.IsLetter(b)
 }
 
-func isDigit(b byte) bool {
-	return b >= 48 && b <= 57
+func isDigit(b rune) bool {
+	return unicode.IsDigit(b)
 }
 
 func (l *Lexer) skipWhitespace() {
-	for l.ch == ' ' || l.ch == '\t' || l.ch == '\r' || l.ch == '\n' {
+	for unicode.IsSpace(l.ch) {
 		l.readChar()
 	}
 }
 
 func (l *Lexer) readString() string {
-	start := l.position + 1 // add one to move past the beginning double quote
+	buffer := make([]rune, 0)
 	for {
 		l.readChar()
 		if l.ch == '"' || l.ch == 0 {
 			break
 		}
+		buffer = append(buffer, l.ch)
 	}
-
-	return l.input[start:l.position]
+	return string(buffer)
 }
