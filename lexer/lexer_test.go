@@ -6,6 +6,12 @@ import (
 	"testing"
 )
 
+func LineInfoEquals(expected, actual token.LineInfo) bool {
+	return expected.FileName == actual.FileName &&
+		expected.Line == actual.Line &&
+		expected.Char == expected.Char
+}
+
 func TestNextToken(t *testing.T) {
 	input := `let five = 55 ;
 let ten = 10;
@@ -33,117 +39,122 @@ if (5 < 10) {
 `
 
 	tests := []struct {
-		expectedType    token.TokenType
-		expectedLiteral string
+		expectedType     token.TokenType
+		expectedLiteral  string
+		expectedLineInfo token.LineInfo
 	}{
-		{token.LET, "let"},
-		{token.IDENT, "five"},
-		{token.ASSIGN, "="},
-		{token.INT, "55"},
-		{token.SEMICOLON, ";"},
+		{token.LET, "let", token.LineInfo{FileName: "REPL", Line: 1, Char: 1}},
+		{token.IDENT, "five", token.LineInfo{FileName: "REPL", Line: 1, Char: 5}},
+		{token.ASSIGN, "=", token.LineInfo{FileName: "REPL", Line: 1, Char: 10}},
+		{token.INT, "55", token.LineInfo{FileName: "REPL", Line: 1, Char: 12}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 1, Char: 15}},
 
-		{token.LET, "let"},
-		{token.IDENT, "ten"},
-		{token.ASSIGN, "="},
-		{token.INT, "10"},
-		{token.SEMICOLON, ";"},
+		{token.LET, "let", token.LineInfo{FileName: "REPL", Line: 2, Char: 1}},
+		{token.IDENT, "ten", token.LineInfo{FileName: "REPL", Line: 2, Char: 5}},
+		{token.ASSIGN, "=", token.LineInfo{FileName: "REPL", Line: 2, Char: 9}},
+		{token.INT, "10", token.LineInfo{FileName: "REPL", Line: 2, Char: 11}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 2, Char: 13}},
 
-		{token.LET, "let"},
-		{token.IDENT, "add"},
-		{token.ASSIGN, "="},
-		{token.FUNCTION, "fn"},
-		{token.LPAREN, "("},
-		{token.IDENT, "x"},
-		{token.COMMA, ","},
-		{token.IDENT, "y"},
-		{token.RPAREN, ")"},
-		{token.LBRACE, "{"},
-		{token.IDENT, "x"},
-		{token.PLUS, "+"},
-		{token.IDENT, "y"},
-		{token.SEMICOLON, ";"},
-		{token.RBRACE, "}"},
-		{token.SEMICOLON, ";"},
+		{token.LET, "let", token.LineInfo{FileName: "REPL", Line: 4, Char: 1}},
+		{token.IDENT, "add", token.LineInfo{FileName: "REPL", Line: 4, Char: 5}},
+		{token.ASSIGN, "=", token.LineInfo{FileName: "REPL", Line: 4, Char: 9}},
+		{token.FUNCTION, "fn", token.LineInfo{FileName: "REPL", Line: 4, Char: 11}},
+		{token.LPAREN, "(", token.LineInfo{FileName: "REPL", Line: 4, Char: 13}},
+		{token.IDENT, "x", token.LineInfo{FileName: "REPL", Line: 4, Char: 14}},
+		{token.COMMA, ",", token.LineInfo{FileName: "REPL", Line: 4, Char: 15}},
+		{token.IDENT, "y", token.LineInfo{FileName: "REPL", Line: 4, Char: 16}},
+		{token.RPAREN, ")", token.LineInfo{FileName: "REPL", Line: 4, Char: 17}},
+		{token.LBRACE, "{", token.LineInfo{FileName: "REPL", Line: 4, Char: 19}},
+		{token.IDENT, "x", token.LineInfo{FileName: "REPL", Line: 5, Char: 2}},
+		{token.PLUS, "+", token.LineInfo{FileName: "REPL", Line: 5, Char: 4}},
+		{token.IDENT, "y", token.LineInfo{FileName: "REPL", Line: 5, Char: 6}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 5, Char: 7}},
+		{token.RBRACE, "}", token.LineInfo{FileName: "REPL", Line: 6, Char: 1}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 6, Char: 2}},
 
-		{token.LET, "let"},
-		{token.IDENT, "result"},
-		{token.ASSIGN, "="},
-		{token.IDENT, "add"},
-		{token.LPAREN, "("},
-		{token.IDENT, "five"},
-		{token.COMMA, ","},
-		{token.IDENT, "ten"},
-		{token.RPAREN, ")"},
-		{token.SEMICOLON, ";"},
+		{token.LET, "let", token.LineInfo{FileName: "REPL", Line: 8, Char: 1}},
+		{token.IDENT, "result", token.LineInfo{FileName: "REPL", Line: 8, Char: 5}},
+		{token.ASSIGN, "=", token.LineInfo{FileName: "REPL", Line: 8, Char: 12}},
+		{token.IDENT, "add", token.LineInfo{FileName: "REPL", Line: 8, Char: 14}},
+		{token.LPAREN, "(", token.LineInfo{FileName: "REPL", Line: 8, Char: 17}},
+		{token.IDENT, "five", token.LineInfo{FileName: "REPL", Line: 8, Char: 18}},
+		{token.COMMA, ",", token.LineInfo{FileName: "REPL", Line: 8, Char: 22}},
+		{token.IDENT, "ten", token.LineInfo{FileName: "REPL", Line: 8, Char: 24}},
+		{token.RPAREN, ")", token.LineInfo{FileName: "REPL", Line: 8, Char: 27}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 8, Char: 28}},
 
-		{token.BANG, "!"},
-		{token.MINUS, "-"},
-		{token.SLASH, "/"},
-		{token.ASTERISK, "*"},
-		{token.INT, "5"},
-		{token.SEMICOLON, ";"},
+		{token.BANG, "!", token.LineInfo{FileName: "REPL", Line: 9, Char: 1}},
+		{token.MINUS, "-", token.LineInfo{FileName: "REPL", Line: 9, Char: 2}},
+		{token.SLASH, "/", token.LineInfo{FileName: "REPL", Line: 9, Char: 3}},
+		{token.ASTERISK, "*", token.LineInfo{FileName: "REPL", Line: 9, Char: 4}},
+		{token.INT, "5", token.LineInfo{FileName: "REPL", Line: 9, Char: 5}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 9, Char: 6}},
 
-		{token.INT, "5"},
-		{token.LT, "<"},
-		{token.INT, "10"},
-		{token.GT, ">"},
-		{token.INT, "5"},
-		{token.SEMICOLON, ";"},
+		{token.INT, "5", token.LineInfo{FileName: "REPL", Line: 10, Char: 1}},
+		{token.LT, "<", token.LineInfo{FileName: "REPL", Line: 10, Char: 3}},
+		{token.INT, "10", token.LineInfo{FileName: "REPL", Line: 10, Char: 5}},
+		{token.GT, ">", token.LineInfo{FileName: "REPL", Line: 10, Char: 8}},
+		{token.INT, "5", token.LineInfo{FileName: "REPL", Line: 10, Char: 10}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 10, Char: 11}},
 
-		{token.IF, "if"},
-		{token.LPAREN, "("},
-		{token.INT, "5"},
-		{token.LT, "<"},
-		{token.INT, "10"},
-		{token.RPAREN, ")"},
-		{token.LBRACE, "{"},
-		{token.RETURN, "return"},
-		{token.TRUE, "true"},
-		{token.SEMICOLON, ";"},
-		{token.RBRACE, "}"},
-		{token.ELSE, "else"},
-		{token.LBRACE, "{"},
-		{token.RETURN, "return"},
-		{token.FALSE, "false"},
-		{token.SEMICOLON, ";"},
-		{token.RBRACE, "}"},
+		{token.IF, "if", token.LineInfo{FileName: "REPL", Line: 12, Char: 1}},
+		{token.LPAREN, "(", token.LineInfo{FileName: "REPL", Line: 12, Char: 4}},
+		{token.INT, "5", token.LineInfo{FileName: "REPL", Line: 12, Char: 5}},
+		{token.LT, "<", token.LineInfo{FileName: "REPL", Line: 12, Char: 7}},
+		{token.INT, "10", token.LineInfo{FileName: "REPL", Line: 12, Char: 9}},
+		{token.RPAREN, ")", token.LineInfo{FileName: "REPL", Line: 12, Char: 11}},
+		{token.LBRACE, "{", token.LineInfo{FileName: "REPL", Line: 12, Char: 13}},
+		{token.RETURN, "return", token.LineInfo{FileName: "REPL", Line: 13, Char: 2}},
+		{token.TRUE, "true", token.LineInfo{FileName: "REPL", Line: 13, Char: 9}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 13, Char: 13}},
+		{token.RBRACE, "}", token.LineInfo{FileName: "REPL", Line: 14, Char: 1}},
+		{token.ELSE, "else", token.LineInfo{FileName: "REPL", Line: 14, Char: 3}},
+		{token.LBRACE, "{", token.LineInfo{FileName: "REPL", Line: 14, Char: 8}},
+		{token.RETURN, "return", token.LineInfo{FileName: "REPL", Line: 15, Char: 2}},
+		{token.FALSE, "false", token.LineInfo{FileName: "REPL", Line: 15, Char: 9}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 15, Char: 14}},
+		{token.RBRACE, "}", token.LineInfo{FileName: "REPL", Line: 16, Char: 1}},
 
-		{token.INT, "10"},
-		{token.EQ, "=="},
-		{token.INT, "10"},
-		{token.SEMICOLON, ";"},
+		{token.INT, "10", token.LineInfo{FileName: "REPL", Line: 18, Char: 1}},
+		{token.EQ, "==", token.LineInfo{FileName: "REPL", Line: 18, Char: 4}},
+		{token.INT, "10", token.LineInfo{FileName: "REPL", Line: 18, Char: 7}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 18, Char: 9}},
 
-		{token.INT, "10"},
-		{token.NOT_EQ, "!="},
-		{token.INT, "9"},
-		{token.SEMICOLON, ";"},
-		{token.STRING, "foobar"},
-		{token.STRING, "foo bar"},
+		{token.INT, "10", token.LineInfo{FileName: "REPL", Line: 19, Char: 1}},
+		{token.NOT_EQ, "!=", token.LineInfo{FileName: "REPL", Line: 19, Char: 4}},
+		{token.INT, "9", token.LineInfo{FileName: "REPL", Line: 19, Char: 7}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 19, Char: 8}},
+		{token.STRING, "foobar", token.LineInfo{FileName: "REPL", Line: 20, Char: 1}},
+		{token.STRING, "foo bar", token.LineInfo{FileName: "REPL", Line: 21, Char: 1}},
 
-		{token.LBRACKET, "["},
-		{token.INT, "1"},
-		{token.COMMA, ","},
-		{token.INT, "2"},
-		{token.RBRACKET, "]"},
-		{token.SEMICOLON, ";"},
-		{token.LBRACE, "{"},
-		{token.STRING, "foo"},
-		{token.COLON, ":"},
-		{token.STRING, "bar"},
-		{token.RBRACE, "}"},
-		{token.EOF, ""},
+		{token.LBRACKET, "[", token.LineInfo{FileName: "REPL", Line: 22, Char: 2}},
+		{token.INT, "1", token.LineInfo{FileName: "REPL", Line: 22, Char: 3}},
+		{token.COMMA, ",", token.LineInfo{FileName: "REPL", Line: 22, Char: 5}},
+		{token.INT, "2", token.LineInfo{FileName: "REPL", Line: 22, Char: 6}},
+		{token.RBRACKET, "]", token.LineInfo{FileName: "REPL", Line: 22, Char: 7}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 22, Char: 8}},
+
+		{token.LBRACE, "{", token.LineInfo{FileName: "REPL", Line: 23, Char: 2}},
+		{token.STRING, "foo", token.LineInfo{FileName: "REPL", Line: 23, Char: 7}},
+		{token.COLON, ":", token.LineInfo{FileName: "REPL", Line: 23, Char: 9}},
+		{token.STRING, "bar", token.LineInfo{FileName: "REPL", Line: 23, Char: 14}},
+		{token.RBRACE, "}", token.LineInfo{FileName: "REPL", Line: 23, Char: 14}},
+		{token.EOF, "", token.LineInfo{FileName: "REPL", Line: 24, Char: 0}},
 	}
 
-	lex := NewFromString(input)
+	lex := NewFromString("REPL", input)
 
-	for i, tt := range tests {
+	for _, tt := range tests {
 		tok := lex.NextToken()
 		fmt.Printf("%+v\n", tok)
 		if tok.Type != tt.expectedType {
-			t.Fatalf("test %d - expected type %s, got %s", i+1, tt.expectedType, tok.Type)
+			t.Fatalf("test[%s] - expected type %s, got %s", tt.expectedLiteral, tt.expectedType, tok.Type)
 		}
 		if tok.Literal != tt.expectedLiteral {
-			t.Fatalf("test %d - expected literal %s, got %s", i+1, tt.expectedLiteral, tok.Literal)
+			t.Fatalf("test[%s] - expected literal %s, got %s", tt.expectedLiteral, tt.expectedLiteral, tok.Literal)
+		}
+		if !LineInfoEquals(tt.expectedLineInfo, tok.LineInfo) {
+			t.Fatalf("test[%s] - expected [%s] got [%s]", tt.expectedLiteral, tt.expectedLineInfo, tok.LineInfo)
 		}
 	}
 }

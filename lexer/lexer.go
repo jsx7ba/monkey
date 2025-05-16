@@ -10,21 +10,24 @@ import (
 )
 
 type Lexer struct {
-	reader *bufio.Reader
-	ch     rune // current char under examination
+	reader   *bufio.Reader
+	fileName string
+	lineNo   int
+	charNo   int
+	ch       rune // current char under examination
 }
 
-func NewFromString(input string) *Lexer {
+func NewFromString(name, input string) *Lexer {
 	strReader := strings.NewReader(input)
 	r := bufio.NewReader(strReader)
-	l := &Lexer{reader: r}
+	l := &Lexer{reader: r, fileName: "REPL", lineNo: 1, charNo: 0}
 	l.readChar()
 	return l
 }
 
-func NewFromReader(r io.Reader) *Lexer {
+func NewFromReader(fileName string, r io.Reader) *Lexer {
 	bufReader := bufio.NewReader(r)
-	l := &Lexer{reader: bufReader}
+	l := &Lexer{reader: bufReader, fileName: fileName, lineNo: 1, charNo: 0}
 	l.readChar()
 	return l
 }
@@ -34,6 +37,7 @@ func (l *Lexer) readChar() {
 	if errors.Is(err, io.EOF) {
 		l.ch = 0
 	} else {
+		l.charNo++
 		l.ch = readRune
 	}
 }
@@ -42,6 +46,7 @@ func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 	readNextChar := true
 	var tok token.Token
+	lineInfo := token.LineInfo{FileName: l.fileName, Line: l.lineNo, Char: l.charNo}
 	switch l.ch {
 	case '=':
 		peek := l.peekChar()
@@ -49,67 +54,71 @@ func (l *Lexer) NextToken() token.Token {
 			ch := l.ch
 			l.readChar()
 			literal := string(ch) + string(l.ch)
-			tok = token.Token{Type: token.EQ, Literal: literal}
+			tok = token.Token{Type: token.EQ, Literal: literal, LineInfo: lineInfo}
 		} else {
-			tok = newToken(token.ASSIGN, l.ch)
+			tok = newToken(token.ASSIGN, l.ch, lineInfo)
 		}
 	case ';':
-		tok = newToken(token.SEMICOLON, l.ch)
+		tok = newToken(token.SEMICOLON, l.ch, lineInfo)
 	case '(':
-		tok = newToken(token.LPAREN, l.ch)
+		tok = newToken(token.LPAREN, l.ch, lineInfo)
 	case ')':
-		tok = newToken(token.RPAREN, l.ch)
+		tok = newToken(token.RPAREN, l.ch, lineInfo)
 	case ',':
-		tok = newToken(token.COMMA, l.ch)
+		tok = newToken(token.COMMA, l.ch, lineInfo)
 	case '+':
-		tok = newToken(token.PLUS, l.ch)
+		tok = newToken(token.PLUS, l.ch, lineInfo)
 	case '{':
-		tok = newToken(token.LBRACE, l.ch)
+		tok = newToken(token.LBRACE, l.ch, lineInfo)
 	case '}':
-		tok = newToken(token.RBRACE, l.ch)
+		tok = newToken(token.RBRACE, l.ch, lineInfo)
 	case '-':
-		tok = newToken(token.MINUS, l.ch)
+		tok = newToken(token.MINUS, l.ch, lineInfo)
 	case '!':
-		tok = newToken(token.BANG, l.ch)
+		tok = newToken(token.BANG, l.ch, lineInfo)
 		if l.peekChar() == '=' {
 			ch := l.ch
 			l.readChar()
 			literal := string(ch) + string(l.ch)
-			tok = token.Token{Type: token.NOT_EQ, Literal: literal}
+			tok = token.Token{Type: token.NOT_EQ, Literal: literal, LineInfo: lineInfo}
 		} else {
-			tok = newToken(token.BANG, l.ch)
+			tok = newToken(token.BANG, l.ch, lineInfo)
 		}
 	case '*':
-		tok = newToken(token.ASTERISK, l.ch)
+		tok = newToken(token.ASTERISK, l.ch, lineInfo)
 	case '/':
-		tok = newToken(token.SLASH, l.ch)
+		tok = newToken(token.SLASH, l.ch, lineInfo)
 	case '<':
-		tok = newToken(token.LT, l.ch)
+		tok = newToken(token.LT, l.ch, lineInfo)
 	case '>':
-		tok = newToken(token.GT, l.ch)
+		tok = newToken(token.GT, l.ch, lineInfo)
 	case '"':
 		tok.Type = token.STRING
 		tok.Literal = l.readString()
+		tok.LineInfo = lineInfo
 	case '[':
-		tok = newToken(token.LBRACKET, l.ch)
+		tok = newToken(token.LBRACKET, l.ch, lineInfo)
 	case ']':
-		tok = newToken(token.RBRACKET, l.ch)
+		tok = newToken(token.RBRACKET, l.ch, lineInfo)
 	case ':':
-		tok = newToken(token.COLON, l.ch)
+		tok = newToken(token.COLON, l.ch, lineInfo)
 	case 0:
 		tok.Literal = ""
 		tok.Type = token.EOF
+		tok.LineInfo = lineInfo
 	default:
 		readNextChar = false
 		if isLetter(l.ch) {
 			tok.Literal = l.readIdentifier()
 			tok.Type = token.LookupIdent(tok.Literal)
+			tok.LineInfo = lineInfo
 			return tok
 		} else if isDigit(l.ch) {
 			tok.Type = token.INT
 			tok.Literal = l.readNumber()
+			tok.LineInfo = lineInfo
 		} else {
-			tok = newToken(token.ILLEGAL, l.ch)
+			tok = newToken(token.ILLEGAL, l.ch, lineInfo)
 		}
 	}
 
@@ -146,10 +155,11 @@ func (l *Lexer) readNumber() string {
 	return string(buffer)
 }
 
-func newToken(t token.TokenType, b rune) token.Token {
+func newToken(t token.TokenType, b rune, lineInfo token.LineInfo) token.Token {
 	return token.Token{
-		Type:    t,
-		Literal: string(b),
+		Type:     t,
+		Literal:  string(b),
+		LineInfo: lineInfo,
 	}
 }
 
@@ -163,6 +173,10 @@ func isDigit(b rune) bool {
 
 func (l *Lexer) skipWhitespace() {
 	for unicode.IsSpace(l.ch) {
+		if l.ch == '\n' {
+			l.charNo = 0
+			l.lineNo++
+		}
 		l.readChar()
 	}
 }

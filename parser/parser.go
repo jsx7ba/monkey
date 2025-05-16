@@ -142,7 +142,7 @@ func (p *Parser) curPrecedence() int {
 }
 
 func (p *Parser) peekError(t token.TokenType) {
-	mesg := fmt.Sprintf("expected next token to be %s, got %s", t, p.peekToken.Type)
+	mesg := fmt.Sprintf("%s expected next token to be %s, got %s", p.peekToken.LineInfo, t, p.peekToken.Type)
 	p.errors = append(p.errors, mesg)
 }
 
@@ -186,15 +186,15 @@ func (p *Parser) parseExpressionStatement() (*ast.ExpressionStatement, bool) {
 	return stmt, true
 }
 
-func (p *Parser) noPrefixParseFnError(t token.TokenType) {
-	msg := fmt.Sprintf("no prefix parse function for %s found", t)
+func (p *Parser) noPrefixParseFnError(t token.Token) {
+	msg := fmt.Sprintf("%s no prefix parse function for %s found", t.LineInfo, t.Type)
 	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	prefixFn, ok := p.prefixParseFns[p.curToken.Type]
 	if !ok {
-		p.noPrefixParseFnError(p.curToken.Type)
+		p.noPrefixParseFnError(p.curToken)
 		return nil
 	}
 	leftExp := prefixFn()
@@ -205,7 +205,6 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 			return leftExp
 		}
 		p.nextToken()
-
 		leftExp = infixFn(leftExp)
 	}
 
@@ -264,7 +263,7 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 
 	value, err := strconv.ParseInt(p.curToken.Literal, 0, 64)
 	if err != nil {
-		msg := fmt.Sprintf("could not parse %q as integer", p.curToken.Literal)
+		msg := fmt.Sprintf("%s could not parse %q as integer", p.curToken.LineInfo, p.curToken.Literal)
 		p.errors = append(p.errors, msg)
 		return nil
 	}

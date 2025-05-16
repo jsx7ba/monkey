@@ -21,7 +21,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		l := lexer.NewFromReader(f)
+		l := lexer.NewFromReader(os.Args[1], f)
 		p := parser.New(l)
 		program := p.ParseProgram()
 		obj := evaluator.Eval(program, object.NewEnvironment())

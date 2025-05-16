@@ -1,10 +1,23 @@
 package token
 
+import "fmt"
+
+type LineInfo struct {
+	FileName string
+	Line     int
+	Char     int
+}
+
+func (li LineInfo) String() string {
+	return fmt.Sprintf("%s: line %d, char %d", li.FileName, li.Line, li.Char)
+}
+
 type TokenType string
 
 type Token struct {
-	Type    TokenType
-	Literal string
+	Type     TokenType
+	Literal  string
+	LineInfo LineInfo
 }
 
 const (

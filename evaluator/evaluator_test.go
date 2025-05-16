@@ -4,6 +4,7 @@ import (
 	"monkey/lexer"
 	"monkey/object"
 	"monkey/parser"
+	"strings"
 	"testing"
 )
 
@@ -32,7 +33,7 @@ func TestEvalIntegerExpression(t *testing.T) {
 }
 
 func testEval(input string) object.Object {
-	l := lexer.NewFromString(input)
+	l := lexer.NewFromString("test", input)
 	p := parser.New(l)
 	program := p.ParseProgram()
 	return Eval(program, object.NewEnvironment())
@@ -225,7 +226,7 @@ func TestErrorHandling(t *testing.T) {
 			continue
 		}
 
-		if errObj.Message != tt.expectedMessage {
+		if !strings.Contains(errObj.Message, tt.expectedMessage) {
 			t.Errorf("[%s]: wrong error message. expsected=%q, got=%q", tt.input, tt.expectedMessage, errObj.Message)
 		}
 	}
