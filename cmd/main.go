@@ -25,6 +25,7 @@ func main() {
 		p := parser.New(l)
 		program := p.ParseProgram()
 		obj := evaluator.Eval(program, object.NewEnvironment())
+
 		if obj != nil {
 			if obj.Type() == object.ERROR_OBJ {
 				fmt.Printf("%s\n", obj.Inspect())
