@@ -128,6 +128,12 @@ func (f *Function) Inspect() string {
 	return out.String()
 }
 
+func NewStringHashKey(value string) HashKey {
+	h := fnv.New64a()
+	_, _ = h.Write([]byte(value))
+	return HashKey{Type: STRING_OBJ, Value: h.Sum64()}
+}
+
 type String struct {
 	Value string
 }
@@ -135,9 +141,7 @@ type String struct {
 func (s *String) Type() ObjectType { return STRING_OBJ }
 func (s *String) Inspect() string  { return s.Value }
 func (s *String) HashKey() HashKey {
-	h := fnv.New64a()
-	_, _ = h.Write([]byte(s.Value))
-	return HashKey{Type: s.Type(), Value: h.Sum64()}
+	return NewStringHashKey(s.Value)
 }
 
 type BuiltinFunction func(args ...Object) Object
