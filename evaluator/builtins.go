@@ -1,8 +1,11 @@
 package evaluator
 
 import (
+	"context"
 	"fmt"
 	"monkey/object"
+	"os/exec"
+	"strings"
 )
 
 var builtins = map[string]*object.Builtin{
@@ -12,6 +15,7 @@ var builtins = map[string]*object.Builtin{
 	"rest":  {Fn: rest},
 	"push":  {Fn: push},
 	"puts":  {Fn: puts, Void: true},
+	"exec":  {Fn: execFn},
 }
 
 func monkeyLen(args ...object.Object) object.Object {
@@ -95,4 +99,24 @@ func puts(args ...object.Object) object.Object {
 		fmt.Println(o.Inspect())
 	}
 	return NULL
+}
+
+func execFn(args ...object.Object) object.Object {
+	if args[0].Type() != object.STRING_OBJ {
+		return newError("%s exec expects a string argument")
+	}
+	strObj := args[0].(*object.String)
+	parts := strings.Split(strObj.Value, " ")
+	cmd := exec.CommandContext(context.Background(), parts[0], parts[1:]...)
+	err := cmd.Err
+	if err != nil {
+		return newError("%+v", err)
+	}
+
+	out, err := cmd.Output()
+	if err != nil {
+		return newError("exec failed: %+v", err)
+	}
+
+	return &object.String{Value: string(out)}
 }
