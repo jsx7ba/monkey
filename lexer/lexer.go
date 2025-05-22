@@ -20,7 +20,7 @@ type Lexer struct {
 func NewFromString(name, input string) *Lexer {
 	strReader := strings.NewReader(input)
 	r := bufio.NewReader(strReader)
-	l := &Lexer{reader: r, fileName: "REPL", lineNo: 1, charNo: 0}
+	l := &Lexer{reader: r, fileName: name, lineNo: 1, charNo: 0}
 	l.readChar()
 	return l
 }
@@ -114,8 +114,7 @@ func (l *Lexer) NextToken() token.Token {
 			tok.LineInfo = lineInfo
 			return tok
 		} else if isDigit(l.ch) {
-			tok.Type = token.INT
-			tok.Literal = l.readNumber()
+			tok.Type, tok.Literal = l.readNumber()
 			tok.LineInfo = lineInfo
 		} else {
 			tok = newToken(token.ILLEGAL, l.ch, lineInfo)
@@ -146,13 +145,31 @@ func (l *Lexer) readIdentifier() string {
 	return string(buffer)
 }
 
-func (l *Lexer) readNumber() string {
+// Octal numbers start with 0
+// Hex numbers 0x
+// floating point numbers
+func (l *Lexer) readNumber() (token.TokenType, string) {
+	numType := token.INT
 	buffer := make([]rune, 0)
-	for isDigit(l.ch) {
+	classifier := isDigit
+	if l.ch == '0' {
+		buffer = append(buffer, l.ch)
+		l.readChar()
+		if l.ch == 'x' || l.ch == 'X' {
+			classifier = isHexDigit
+		} else if isOctalDigit(l.ch) {
+			classifier = isOctalDigit
+		}
+	}
+
+	for l.ch == '.' || classifier(l.ch) {
+		if l.ch == '.' {
+			numType = token.FLOAT
+		}
 		buffer = append(buffer, l.ch)
 		l.readChar()
 	}
-	return string(buffer)
+	return token.TokenType(numType), string(buffer)
 }
 
 func newToken(t token.TokenType, b rune, lineInfo token.LineInfo) token.Token {
@@ -165,6 +182,13 @@ func newToken(t token.TokenType, b rune, lineInfo token.LineInfo) token.Token {
 
 func isLetter(b rune) bool {
 	return unicode.IsLetter(b)
+}
+func isHexDigit(b rune) bool {
+	return isDigit(b) || (b >= 65 && b <= 90) || (b >= 97 && b <= 122)
+}
+
+func isOctalDigit(b rune) bool {
+	return b >= 48 && b >= 55
 }
 
 func isDigit(b rune) bool {

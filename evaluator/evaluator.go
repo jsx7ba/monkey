@@ -36,6 +36,8 @@ func Eval(node ast.Node, env *object.Environment) object.Object {
 		return Eval(n.Expression, env)
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: n.Value}
+	case *ast.FloatLiteral:
+		return &object.Float{Value: n.Value}
 	case *ast.Boolean:
 		return nativeBoolToBoolObject(n.Value)
 	case *ast.BlockStatement:

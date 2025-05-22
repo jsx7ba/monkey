@@ -36,6 +36,10 @@ if (5 < 10) {
 "foo bar"
 [1, 2];
 {"foo": "bar"}
+let hexNum = 0x33;
+let octNum = 033;
+let fa = 3.141592;
+let fb = 0.003;
 `
 
 	tests := []struct {
@@ -139,7 +143,32 @@ if (5 < 10) {
 		{token.COLON, ":", token.LineInfo{FileName: "REPL", Line: 23, Char: 9}},
 		{token.STRING, "bar", token.LineInfo{FileName: "REPL", Line: 23, Char: 14}},
 		{token.RBRACE, "}", token.LineInfo{FileName: "REPL", Line: 23, Char: 14}},
-		{token.EOF, "", token.LineInfo{FileName: "REPL", Line: 24, Char: 0}},
+
+		{token.LET, "let", token.LineInfo{FileName: "REPL", Line: 24, Char: 1}},
+		{token.IDENT, "hexNum", token.LineInfo{FileName: "REPL", Line: 24, Char: 5}},
+		{token.ASSIGN, "=", token.LineInfo{FileName: "REPL", Line: 24, Char: 12}},
+		{token.INT, "0x33", token.LineInfo{FileName: "REPL", Line: 24, Char: 14}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 24, Char: 18}},
+
+		{token.LET, "let", token.LineInfo{FileName: "REPL", Line: 25, Char: 1}},
+		{token.IDENT, "octNum", token.LineInfo{FileName: "REPL", Line: 25, Char: 5}},
+		{token.ASSIGN, "=", token.LineInfo{FileName: "REPL", Line: 25, Char: 12}},
+		{token.INT, "033", token.LineInfo{FileName: "REPL", Line: 25, Char: 14}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 25, Char: 17}},
+
+		{token.LET, "let", token.LineInfo{FileName: "REPL", Line: 26, Char: 1}},
+		{token.IDENT, "fa", token.LineInfo{FileName: "REPL", Line: 26, Char: 5}},
+		{token.ASSIGN, "=", token.LineInfo{FileName: "REPL", Line: 26, Char: 8}},
+		{token.FLOAT, "3.141592", token.LineInfo{FileName: "REPL", Line: 26, Char: 10}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 26, Char: 18}},
+
+		{token.LET, "let", token.LineInfo{FileName: "REPL", Line: 27, Char: 1}},
+		{token.IDENT, "fb", token.LineInfo{FileName: "REPL", Line: 27, Char: 5}},
+		{token.ASSIGN, "=", token.LineInfo{FileName: "REPL", Line: 27, Char: 8}},
+		{token.FLOAT, "0.003", token.LineInfo{FileName: "REPL", Line: 27, Char: 10}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 27, Char: 15}},
+
+		{token.EOF, "", token.LineInfo{FileName: "REPL", Line: 28, Char: 0}},
 	}
 
 	lex := NewFromString("REPL", input)

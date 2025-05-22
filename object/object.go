@@ -61,6 +61,16 @@ type Object interface {
 	Inspect() string
 }
 
+type Float struct {
+	Value float64
+}
+
+func (f *Float) Inspect() string  { return fmt.Sprintf("%f", f.Value) }
+func (f *Float) Type() ObjectType { return INTEGER_OBJ }
+func (f *Float) HashKey() HashKey {
+	return HashKey{Type: f.Type(), Value: uint64(f.Value)}
+}
+
 type Integer struct {
 	Value int64
 }
