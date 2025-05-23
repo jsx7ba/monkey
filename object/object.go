@@ -12,6 +12,7 @@ type ObjectType string
 
 const (
 	INTEGER_OBJ      ObjectType = "INTEGER"
+	FLOAT_OBJ        ObjectType = "FLOAT"
 	BOOLEAN_OBJ      ObjectType = "BOOLEAN"
 	NULL_OBJ         ObjectType = "NULL"
 	RETURN_VALUE_OBJ ObjectType = "RETURN_VALUE"
@@ -66,7 +67,7 @@ type Float struct {
 }
 
 func (f *Float) Inspect() string  { return fmt.Sprintf("%f", f.Value) }
-func (f *Float) Type() ObjectType { return INTEGER_OBJ }
+func (f *Float) Type() ObjectType { return FLOAT_OBJ }
 func (f *Float) HashKey() HashKey {
 	return HashKey{Type: f.Type(), Value: uint64(f.Value)}
 }
