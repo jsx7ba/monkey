@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"cmp"
 	"context"
 	"fmt"
 	"monkey/object"
@@ -16,6 +17,7 @@ var builtins = map[string]*object.Builtin{
 	"push":  {Fn: push},
 	"puts":  {Fn: puts, Void: true},
 	"exec":  {Fn: execFn},
+	"cmp":   {Fn: cmpFn},
 }
 
 func monkeyLen(args ...object.Object) object.Object {
@@ -103,7 +105,7 @@ func puts(args ...object.Object) object.Object {
 
 func execFn(args ...object.Object) object.Object {
 	if args[0].Type() != object.STRING_OBJ {
-		return newError("%s exec expects a string argument")
+		return newError("exec requires a string argument")
 	}
 	strObj := args[0].(*object.String)
 	parts := strings.Split(strObj.Value, " ")
@@ -119,4 +121,37 @@ func execFn(args ...object.Object) object.Object {
 	}
 
 	return &object.String{Value: string(out)}
+}
+
+func cmpFn(args ...object.Object) object.Object {
+	if len(args) != 2 {
+		return newError("cmp requires 2 arguments")
+	}
+
+	switch args[0].Type() {
+	case object.FLOAT_OBJ:
+		a, ok := args[0].(*object.Float)
+		if !ok {
+			return newError("first argument must be a float")
+		}
+		b, ok := args[1].(*object.Float)
+
+		if !ok {
+			return newError("second argument must be a float")
+		}
+
+		return &object.Integer{Value: int64(cmp.Compare(a.Value, b.Value))}
+	case object.STRING_OBJ:
+		a, ok := args[0].(*object.String)
+		if !ok {
+			return newError("first argument must be a string")
+		}
+		b, ok := args[1].(*object.String)
+		if !ok {
+			return newError("second argument must be a string")
+		}
+		return &object.Integer{Value: int64(strings.Compare(a.Value, b.Value))}
+	default:
+		return newError("unsupported type: %s", args[0].Type())
+	}
 }

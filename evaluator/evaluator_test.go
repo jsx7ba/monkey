@@ -340,6 +340,14 @@ func TestBuiltinFunction(t *testing.T) {
 		{`last([1, 2, 3]);`, 3},
 		{`last([1], [2]);`, "wrong number of arguments. got=2, want=1"},
 		{`last("foo");`, "argument to 'last' must be an array, got STRING"},
+		{`cmp("foo", "foo");`, 0},
+		{`cmp("boo", "foo");`, -1},
+		{`cmp("zoo", "foo");`, 1},
+		{`cmp(3.141592, 3.141592);`, 0},
+		{`cmp(3.141592, 3.141593);`, -1},
+		{`cmp(3000.141592, 3.141593);`, 1},
+		{`cmp(3000.141592, "3.141593");`, "second argument must be a float"},
+		{`cmp("3000.141592", 3000.141592 );`, "second argument must be a string"},
 	}
 
 	for _, tt := range tests {
