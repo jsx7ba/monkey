@@ -17,7 +17,6 @@ Following the book [Writing an Interpreter in Go](https://a.co/d/a7Zb1Br) by Tho
     - puts(): prints a value to stdout.
     - exec(): executes a command and returns the stdout.
     - cmp(): For strings and floating point values, return -1, 0, or 1 if the first argument is less than, equal or greater than the second.
-  
 
 ## Building Monkey
 
