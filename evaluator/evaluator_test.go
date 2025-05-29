@@ -1,9 +1,12 @@
 package evaluator
 
 import (
+	"cmp"
+	"io"
 	"monkey/lexer"
 	"monkey/object"
 	"monkey/parser"
+	"os"
 	"strings"
 	"testing"
 )
@@ -32,11 +35,50 @@ func TestEvalIntegerExpression(t *testing.T) {
 	}
 }
 
+func TestEvalFloatExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected float64
+	}{
+		{"5.0", 5.0},
+		{"-5.0", -5.0},
+		{"10.0", 10.0},
+		{"-10.0", -10.0},
+		{"5.0 + 5.0 + 5.0 + 5.0 - 10.0", 10.0},
+		{"2.0 * 2.0 * 2.0 * 2.0 * 2.0", 32.0},
+		{"5.0 * 2.0 + 10.0", 20.0},
+		{"-50.0 + 100.0 + -50.0", 0.0},
+		{"50.0 / 2.0 * 2.0 + 10.0", 60.0},
+		{"3.0 * 3.0 * 3.0 + 10.0", 37.0},
+		{"(5.0 + 10.0 * 2.0 + 15.0 / 3.0) * 2.0 + -10.0", 50.0},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testFloatObject(tt.input, t, evaluated, tt.expected)
+	}
+}
+
 func testEval(input string) object.Object {
 	l := lexer.NewFromString("test", input)
 	p := parser.New(l)
 	program := p.ParseProgram()
 	return Eval(program, object.NewEnvironment())
+}
+
+func testFloatObject(input string, t *testing.T, obj object.Object, expected float64) bool {
+	result, ok := obj.(*object.Float)
+	if !ok {
+		t.Errorf("[%s] object is not Float, got= %T(%+v)", input, obj, obj)
+		return false
+	}
+
+	if cmp.Compare(result.Value, expected) != 0 {
+		t.Errorf("[%s] object has wrong value, actual=%f expected=%f", input, result.Value, expected)
+		return false
+	}
+
+	return true
 }
 
 func testIntegerObject(input string, t *testing.T, obj object.Object, expected int64) bool {
@@ -452,5 +494,24 @@ func TestHashIndexExpressions(t *testing.T) {
 		} else {
 			testNullObject(tt.input, t, evaluated)
 		}
+	}
+}
+
+func BenchmarkScript1(b *testing.B) {
+	script := "testdata/test.monkey"
+	fd, err := os.Open(script)
+	if err != nil {
+		b.Fatalf("failed to open monkey script %s", script)
+	}
+	defer fd.Close()
+
+	buf, err := io.ReadAll(fd)
+	code := string(buf)
+
+	for b.Loop() {
+		l := lexer.NewFromString(script, code)
+		p := parser.New(l)
+		program := p.ParseProgram()
+		Eval(program, object.NewEnvironment())
 	}
 }
