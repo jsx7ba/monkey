@@ -8,21 +8,52 @@ import (
 	"strings"
 )
 
-type ObjectType string
+type ObjectType int
 
 const (
-	INTEGER_OBJ      ObjectType = "INTEGER"
-	FLOAT_OBJ        ObjectType = "FLOAT"
-	BOOLEAN_OBJ      ObjectType = "BOOLEAN"
-	NULL_OBJ         ObjectType = "NULL"
-	RETURN_VALUE_OBJ ObjectType = "RETURN_VALUE"
-	ERROR_OBJ        ObjectType = "ERROR"
-	FUNCTION_OBJ     ObjectType = "FUNCTION"
-	STRING_OBJ       ObjectType = "STRING"
-	BUILTIN_OBJ      ObjectType = "BUILTIN"
-	ARRAY_OBJ        ObjectType = "ARRAY"
-	HASH_OBJ         ObjectType = "HASH"
+	INTEGER_OBJ ObjectType = iota + 1
+	FLOAT_OBJ
+	BOOLEAN_OBJ
+	NULL_OBJ
+	RETURN_VALUE_OBJ
+	ERROR_OBJ
+	FUNCTION_OBJ
+	STRING_OBJ
+	BUILTIN_OBJ
+	ARRAY_OBJ
+	HASH_OBJ
 )
+
+func (o ObjectType) String() string {
+	name := ""
+	switch o {
+	case INTEGER_OBJ:
+		name = "INTEGER"
+	case FLOAT_OBJ:
+		name = "FLOAT"
+	case BOOLEAN_OBJ:
+		name = "BOOLEAN"
+	case NULL_OBJ:
+		name = "NULL"
+	case RETURN_VALUE_OBJ:
+		name = "RETURN_VALUE"
+	case ERROR_OBJ:
+		name = "ERROR"
+	case FUNCTION_OBJ:
+		name = "FUNCTION"
+	case STRING_OBJ:
+		name = "STRING"
+	case BUILTIN_OBJ:
+		name = "BUILTIN"
+	case ARRAY_OBJ:
+		name = "ARRAY"
+	case HASH_OBJ:
+		name = "HASH"
+	default:
+		name = "unknown object type"
+	}
+	return name
+}
 
 type Hashable interface {
 	HashKey() HashKey
