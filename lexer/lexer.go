@@ -155,22 +155,24 @@ func (l *Lexer) readNumber() (token.TokenType, string) {
 	numType := token.INT
 	buffer := make([]rune, 0)
 	classifier := isDigit
+	peek := l.peekChar()
+
 	if l.ch == '0' {
-		buffer = append(buffer, l.ch)
-		l.readChar()
-		if l.ch == 'x' || l.ch == 'X' {
+		if peek == 'x' || peek == 'X' {
 			classifier = isHexDigit
 		} else if isOctalDigit(l.ch) {
 			classifier = isOctalDigit
 		}
 	}
 
-	for l.ch == '.' || classifier(l.ch) {
-		if l.ch == '.' {
-			numType = token.FLOAT
-		}
+	for classifier(l.ch) {
 		buffer = append(buffer, l.ch)
 		l.readChar()
+		if l.ch == '.' {
+			numType = token.FLOAT
+			buffer = append(buffer, l.ch)
+			l.readChar()
+		}
 	}
 	return token.TokenType(numType), string(buffer)
 }

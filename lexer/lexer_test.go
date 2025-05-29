@@ -13,7 +13,7 @@ func LineInfoEquals(expected, actual token.LineInfo) bool {
 }
 
 func TestNextToken(t *testing.T) {
-	input := `let five = 55 ;
+	input := `let five = 55;
 let ten = 10;
 
 let add = fn(x,y) {
@@ -40,6 +40,8 @@ let hexNum = 0x33;
 let octNum = 033;
 let fa = 3.141592;
 let fb = 0.003;
+let array = ["a", "b"];
+let xx = array[0];
 `
 
 	tests := []struct {
@@ -168,7 +170,26 @@ let fb = 0.003;
 		{token.FLOAT, "0.003", token.LineInfo{FileName: "REPL", Line: 27, Char: 10}},
 		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 27, Char: 15}},
 
-		{token.EOF, "", token.LineInfo{FileName: "REPL", Line: 28, Char: 0}},
+		{token.LET, "let", token.LineInfo{FileName: "REPL", Line: 28, Char: 1}},
+		{token.IDENT, "array", token.LineInfo{FileName: "REPL", Line: 28, Char: 5}},
+		{token.ASSIGN, "=", token.LineInfo{FileName: "REPL", Line: 28, Char: 11}},
+		{token.LBRACKET, "[", token.LineInfo{FileName: "REPL", Line: 28, Char: 13}},
+		{token.STRING, "a", token.LineInfo{FileName: "REPL", Line: 28, Char: 14}},
+		{token.COMMA, ",", token.LineInfo{FileName: "REPL", Line: 28, Char: 17}},
+		{token.STRING, "b", token.LineInfo{FileName: "REPL", Line: 28, Char: 19}},
+		{token.RBRACKET, "]", token.LineInfo{FileName: "REPL", Line: 28, Char: 22}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 28, Char: 23}},
+
+		{token.LET, "let", token.LineInfo{FileName: "REPL", Line: 29, Char: 1}},
+		{token.IDENT, "xx", token.LineInfo{FileName: "REPL", Line: 29, Char: 5}},
+		{token.ASSIGN, "=", token.LineInfo{FileName: "REPL", Line: 29, Char: 8}},
+		{token.IDENT, "array", token.LineInfo{FileName: "REPL", Line: 29, Char: 10}},
+		{token.LBRACKET, "[", token.LineInfo{FileName: "REPL", Line: 29, Char: 15}},
+		{token.INT, "0", token.LineInfo{FileName: "REPL", Line: 29, Char: 16}},
+		{token.RBRACKET, "]", token.LineInfo{FileName: "REPL", Line: 29, Char: 17}},
+		{token.SEMICOLON, ";", token.LineInfo{FileName: "REPL", Line: 29, Char: 18}},
+
+		{token.EOF, "", token.LineInfo{FileName: "REPL", Line: 30, Char: 0}},
 	}
 
 	lex := NewFromString("REPL", input)
