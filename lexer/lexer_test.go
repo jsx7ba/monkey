@@ -208,3 +208,29 @@ let xx = array[0];
 		}
 	}
 }
+
+func TestLineNumbersWithComments(t *testing.T) {
+	input := `0; # tail comment
+   # line commented out
+42;`
+
+	l := NewFromString("REPL", input)
+	l.NextToken() // read the 0
+	l.NextToken() // read the ;
+	tok := l.NextToken()
+	if tok.Type != token.INT {
+		t.Errorf("expected %s got %s", token.INT, tok.Type)
+	}
+	if tok.Literal != "42" {
+		t.Errorf("expected %s got %s", "42", tok.Literal)
+	}
+
+	expectedLineInfo := token.LineInfo{
+		FileName: "REPL",
+		Line:     3,
+		Char:     0,
+	}
+	if !LineInfoEquals(expectedLineInfo, tok.LineInfo) {
+		t.Errorf("expected %s got %s", expectedLineInfo, tok.LineInfo)
+	}
+}
