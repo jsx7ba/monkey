@@ -7,6 +7,7 @@ Following the book [Writing an Interpreter in Go](https://a.co/d/a7Zb1Br) by Tho
 - Octal and hexadecimal integer constants
 - Access to environment variables
 - Process execution (with only stdout returned)
+- \# Comments 
 
 ## Built-in Functions
     - len(): The length of a string or array.
