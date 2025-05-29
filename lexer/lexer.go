@@ -48,6 +48,9 @@ func (l *Lexer) NextToken() token.Token {
 	var tok token.Token
 	lineInfo := token.LineInfo{FileName: l.fileName, Line: l.lineNo, Char: l.charNo}
 	switch l.ch {
+	case '#':
+		l.skipComment()
+		tok = l.NextToken()
 	case '=':
 		peek := l.peekChar()
 		if peek == '=' {
@@ -215,4 +218,11 @@ func (l *Lexer) readString() string {
 		buffer = append(buffer, l.ch)
 	}
 	return string(buffer)
+}
+
+func (l *Lexer) skipComment() {
+	for l.ch != '\n' {
+		l.readChar()
+	}
+	l.skipWhitespace()
 }
