@@ -141,7 +141,7 @@ func (l *Lexer) peekChar() rune {
 
 func (l *Lexer) readIdentifier() string {
 	buffer := make([]rune, 0)
-	for isLetter(l.ch) {
+	for isIdentifier(l.ch) {
 		buffer = append(buffer, l.ch)
 		l.readChar()
 	}
@@ -183,6 +183,10 @@ func newToken(t token.TokenType, b rune, lineInfo token.LineInfo) token.Token {
 		Literal:  string(b),
 		LineInfo: lineInfo,
 	}
+}
+
+func isIdentifier(b rune) bool {
+	return unicode.IsLetter(b) || unicode.IsDigit(b) || b == '_'
 }
 
 func isLetter(b rune) bool {
