@@ -1,6 +1,6 @@
 # Monkey Scripting Language
 
-Following the book [Writing an Interpreter in Go](https://a.co/d/a7Zb1Br) by Thorsten Ball, with the following modifications:
+Following the book [Writing an Interpreter in Go](https://a.co/d/a7Zb1Br) and [Writing a Compiler in Go](https://a.co/d/8QmAUQn) by Thorsten Ball, with the following modifications:
 - Unicode lexer
 - File evaluation `monkey <file>`
 - Floating point types
