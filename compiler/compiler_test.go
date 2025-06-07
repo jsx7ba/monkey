@@ -22,7 +22,16 @@ func TestIntegerArithmetic(t *testing.T) {
 			[]code.Instructions{
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpConstant, 1),
-				code.Make(code.OpAdd)},
+				code.Make(code.OpAdd),
+				code.Make(code.OpPop)},
+		},
+
+		{"1; 2;", []interface{}{1, 2},
+			[]code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpPop),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpPop)},
 		},
 	}
 
@@ -58,7 +67,7 @@ func parse(input string) *ast.Program {
 func testInstructions(expected []code.Instructions, actual code.Instructions) error {
 	concatted := concatInstructions(expected)
 	if len(actual) != len(concatted) {
-		return fmt.Errorf("wrong instructions length. \nwant=%q\ngot=%q", concatted, actual)
+		return fmt.Errorf("wrong instructions length. \nwant=%q\ngot= %q", concatted, actual)
 	}
 
 	for i, ins := range concatted {
