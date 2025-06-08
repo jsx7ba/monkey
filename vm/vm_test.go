@@ -41,28 +41,28 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 		comp := compiler.New()
 		err := comp.Compile(program)
 		if err != nil {
-			t.Fatalf("compiler error: %+v", err)
+			t.Fatalf("[%s] compiler error: %+v", tt.input, err)
 		}
 
 		vm := New(comp.Bytecode())
 		err = vm.Run()
 		if err != nil {
-			t.Fatalf("vm err: %+v", err)
+			t.Fatalf("[%s] vm err: %+v", tt.input, err)
 		}
 
 		stackElem := vm.LastPoppedStackElem()
-		testExpectedObject(t, tt.expected, stackElem)
+		testExpectedObject(t, tt.input, tt.expected, stackElem)
 
 	}
 }
 
-func testExpectedObject(t *testing.T, expected interface{}, actual object.Object) {
+func testExpectedObject(t *testing.T, input string, expected interface{}, actual object.Object) {
 	t.Helper()
 	switch expected := expected.(type) {
 	case int:
 		err := testIntegerObject(int64(expected), actual)
 		if err != nil {
-			t.Errorf("test2IntegerObject failed: %+v", err)
+			t.Errorf("[%s] test2IntegerObject failed: %+v", input, err)
 		}
 	}
 }
@@ -72,6 +72,38 @@ func TestIntegerArithmetic(t *testing.T) {
 		{"1", 1},
 		{"2", 2},
 		{"1 + 2", 3},
+		{"1 - 2", -1},
+		{"1 * 2", 2},
+		{"4 / 2", 2},
+		{"50 / 2 * 2 + 10 - 5", 55},
+		{"2 * 2 * 2 * 2 * 2", 32},
+		{"5 + 2 + 10", 17},
+		{"5 + 2 * 10", 25},
+		{"5 * (2 + 10)", 60},
 	}
 	runVmTests(t, tests)
+}
+
+func TestExecutionPath(t *testing.T) {
+	input := "13 + 14 + 15 + 16"
+	l := lexer.NewFromString("test", input)
+	p := parser.New(l)
+	program := p.ParseProgram()
+	programErrors := p.Errors()
+	if len(programErrors) != 0 {
+		t.Fatalf("Error parsing program: %+v", programErrors)
+	}
+
+	c := compiler.New()
+	err := c.Compile(program)
+	if err != nil {
+		t.Fatalf("Error compiling program: %+v", err)
+	}
+	bc := c.Bytecode()
+	v := New(bc)
+	err = v.Run()
+	if err != nil {
+		t.Fatalf("Error running program: %+v", err)
+	}
+	fmt.Println(input, "=", v.LastPoppedStackElem().Inspect())
 }
