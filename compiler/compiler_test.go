@@ -56,6 +56,10 @@ func TestIntegerArithmetic(t *testing.T) {
 		},
 	}
 
+	runCompilerTests(t, tests)
+}
+
+func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 	for _, tt := range tests {
 		program := parse(tt.input)
 
@@ -132,4 +136,12 @@ func testIntegerObject(expected int64, actual object.Object) error {
 		return fmt.Errorf("object has wrong value. got=%d, want=%d", result.Value, expected)
 	}
 	return nil
+}
+
+func TestBooleanExpressions(t *testing.T) {
+	tests := []compilerTestCase{
+		{"true", []interface{}{}, []code.Instructions{code.Make(code.OpTrue), code.Make(code.OpPop)}},
+		{"false", []interface{}{}, []code.Instructions{code.Make(code.OpFalse), code.Make(code.OpPop)}},
+	}
+	runCompilerTests(t, tests)
 }

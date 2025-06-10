@@ -58,13 +58,29 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 
 func testExpectedObject(t *testing.T, input string, expected interface{}, actual object.Object) {
 	t.Helper()
-	switch expected := expected.(type) {
+	switch expectedType := expected.(type) {
+	case bool:
+		err := testBooleanObject(bool(expectedType), actual)
+		if err != nil {
+			t.Errorf("testBooleanObject failed: %+v", err)
+		}
 	case int:
-		err := testIntegerObject(int64(expected), actual)
+		err := testIntegerObject(int64(expectedType), actual)
 		if err != nil {
 			t.Errorf("[%s] test2IntegerObject failed: %+v", input, err)
 		}
 	}
+}
+
+func testBooleanObject(expected bool, actual object.Object) error {
+	result, ok := actual.(*object.Boolean)
+	if !ok {
+		return fmt.Errorf("object is not Boolean.  got=%T(%+v)", actual, actual)
+	}
+	if result.Value != expected {
+		return fmt.Errorf("object has wrong value. got=%t, want=%t", result.Value, expected)
+	}
+	return nil
 }
 
 func TestIntegerArithmetic(t *testing.T) {
@@ -106,4 +122,12 @@ func TestExecutionPath(t *testing.T) {
 		t.Fatalf("Error running program: %+v", err)
 	}
 	fmt.Println(input, "=", v.LastPoppedStackElem().Inspect())
+}
+
+func TestBooleanExpressions(t *testing.T) {
+	tests := []vmTestCase{
+		{"true", true},
+		{"false", false},
+	}
+	runVmTests(t, tests)
 }
