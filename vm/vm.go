@@ -37,39 +37,32 @@ func (vm *VM) StackTop() object.Object {
 }
 
 func (vm *VM) Run() error {
+	var err error
 	for ip := 0; ip < len(vm.instructions); ip++ {
 		op := code.Opcode(vm.instructions[ip])
 		switch op {
 		case code.OpConstant:
 			constIndex := code.ReadUint16(vm.instructions[ip+1:])
 			ip += 2
-
-			err := vm.push(vm.constants[constIndex])
-			if err != nil {
-				return err
-			}
+			err = vm.push(vm.constants[constIndex])
 		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
-			err := vm.executeBinaryOperation(op)
-			if err != nil {
-				return err
-			}
+			err = vm.executeBinaryOperation(op)
 		case code.OpTrue:
-			err := vm.push(True)
-			if err != nil {
-				return err
-			}
+			err = vm.push(True)
 		case code.OpFalse:
-			err := vm.push(False)
-			if err != nil {
-				return err
-			}
+			err = vm.push(False)
 		case code.OpEqual, code.OpNotEqual, code.OpGreaterThan:
-			err := vm.executeComparison(op)
-			if err != nil {
-				return err
-			}
+			err = vm.executeComparison(op)
+		case code.OpBang:
+			err = vm.executeBangOperator()
+		case code.OpMinus:
+			err = vm.executeMinusOperator()
 		case code.OpPop:
 			vm.pop()
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -92,6 +85,26 @@ func (vm *VM) pop() object.Object {
 
 func (vm *VM) LastPoppedStackElem() object.Object {
 	return vm.stack[vm.sp]
+}
+func (vm *VM) executeMinusOperator() error {
+	op := vm.pop()
+	if op.Type() != object.INTEGER_OBJ {
+		return fmt.Errorf("unsupported type for negation: %s", op.Type())
+	}
+	value := op.(*object.Integer).Value
+	return vm.push(&object.Integer{Value: -value})
+}
+
+func (vm *VM) executeBangOperator() error {
+	op := vm.pop()
+	switch op {
+	case True:
+		return vm.push(False)
+	case False:
+		return vm.push(True)
+	default:
+		return vm.push(False)
+	}
 }
 
 func (vm *VM) executeBinaryOperation(op code.Opcode) error {

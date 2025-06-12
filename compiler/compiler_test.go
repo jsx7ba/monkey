@@ -104,6 +104,15 @@ func TestIntegerArithmetic(t *testing.T) {
 				code.Make(code.OpPop),
 			},
 		},
+		{
+			"-1",
+			[]interface{}{1},
+			[]code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpMinus),
+				code.Make(code.OpPop),
+			},
+		},
 	}
 
 	runCompilerTests(t, tests)
@@ -192,6 +201,7 @@ func TestBooleanExpressions(t *testing.T) {
 	tests := []compilerTestCase{
 		{"true", []interface{}{}, []code.Instructions{code.Make(code.OpTrue), code.Make(code.OpPop)}},
 		{"false", []interface{}{}, []code.Instructions{code.Make(code.OpFalse), code.Make(code.OpPop)}},
+		{"!true", []interface{}{}, []code.Instructions{code.Make(code.OpTrue), code.Make(code.OpBang), code.Make(code.OpPop)}},
 	}
 	runCompilerTests(t, tests)
 }
