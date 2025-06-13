@@ -132,12 +132,12 @@ func runCompilerTests(t *testing.T, tests []compilerTestCase) {
 
 		err = testInstructions(tt.expectedInstructions, bytecode.Instructions)
 		if err != nil {
-			t.Fatalf("testInstructions failed %+v", err)
+			t.Fatalf("[%s] testInstructions failed %+v", tt.input, err)
 		}
 
 		err = testConstants(tt.input, tt.expectedConstants, bytecode.Constants)
 		if err != nil {
-			t.Fatalf("testConstants failed %+v", err)
+			t.Fatalf("[%s] testConstants failed %+v", tt.input, err)
 		}
 	}
 }
@@ -151,12 +151,12 @@ func parse(input string) *ast.Program {
 func testInstructions(expected []code.Instructions, actual code.Instructions) error {
 	concatted := concatInstructions(expected)
 	if len(actual) != len(concatted) {
-		return fmt.Errorf("wrong instructions length. \nwant=%q\ngot= %q", concatted, actual)
+		return fmt.Errorf("wrong instructions length. \nwant=%q\ngot =%q", concatted, actual)
 	}
 
 	for i, ins := range concatted {
 		if actual[i] != ins {
-			return fmt.Errorf("wrong instruction at %d.\nwant=%q\ngot=%q", i, concatted, actual)
+			return fmt.Errorf("wrong instruction at %d.\nwant=%q\ngot =%q", i, concatted, actual)
 		}
 	}
 	return nil
@@ -203,5 +203,27 @@ func TestBooleanExpressions(t *testing.T) {
 		{"false", []interface{}{}, []code.Instructions{code.Make(code.OpFalse), code.Make(code.OpPop)}},
 		{"!true", []interface{}{}, []code.Instructions{code.Make(code.OpTrue), code.Make(code.OpBang), code.Make(code.OpPop)}},
 	}
+	runCompilerTests(t, tests)
+}
+
+func TestConditionals(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			`if (true) { 10 } else { 20 }; 3333;`,
+			[]interface{}{10, 20, 3333},
+			[]code.Instructions{
+				code.Make(code.OpTrue),
+				code.Make(code.OpJumpNotTruthy, 10),
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpJump, 13),
+
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpPop),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+
 	runCompilerTests(t, tests)
 }
