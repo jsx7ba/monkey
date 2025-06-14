@@ -216,7 +216,6 @@ func TestConditionals(t *testing.T) {
 				code.Make(code.OpJumpNotTruthy, 10),
 				code.Make(code.OpConstant, 0),
 				code.Make(code.OpJump, 13),
-
 				code.Make(code.OpConstant, 1),
 				code.Make(code.OpPop),
 				code.Make(code.OpConstant, 2),
@@ -224,12 +223,14 @@ func TestConditionals(t *testing.T) {
 			},
 		},
 		{
-			`if (true) { 10 } 3333;`,
+			`if (true) { 10 }; 3333;`,
 			[]interface{}{10, 3333},
 			[]code.Instructions{
 				code.Make(code.OpTrue),
-				code.Make(code.OpJumpNotTruthy, 7),
+				code.Make(code.OpJumpNotTruthy, 10),
 				code.Make(code.OpConstant, 0),
+				code.Make(code.OpJump, 11),
+				code.Make(code.OpNull),
 				code.Make(code.OpPop),
 				code.Make(code.OpConstant, 1),
 				code.Make(code.OpPop),
