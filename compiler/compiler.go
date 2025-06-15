@@ -17,6 +17,7 @@ type Compiler struct {
 	constants           []object.Object
 	lastInstruction     EmittedInstruction
 	previousInstruction EmittedInstruction
+	symbolTable         *SymbolTable
 }
 
 func New() *Compiler {
@@ -25,7 +26,15 @@ func New() *Compiler {
 		constants:           []object.Object{},
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
+		symbolTable:         NewSymbolTable(),
 	}
+}
+
+func NewWithState(s *SymbolTable, constants []object.Object) *Compiler {
+	compiler := New()
+	compiler.symbolTable = s
+	compiler.constants = constants
+	return compiler
 }
 
 func (c *Compiler) Compile(node ast.Node) error {
@@ -109,6 +118,20 @@ func (c *Compiler) Compile(node ast.Node) error {
 		for i := 0; i != len(node.Statements) && err == nil; i++ {
 			err = c.Compile(node.Statements[i])
 		}
+	case *ast.Identifier:
+		sym, ok := c.symbolTable.Resolve(node.Value)
+		if !ok {
+			err = fmt.Errorf("undefined variable %s", node.Value)
+		}
+		if sym.Scope == GlobalScope {
+			c.emit(code.OpGetGlobal, sym.Index)
+		} else {
+			err = fmt.Errorf("local variables not implemented")
+		}
+	case *ast.LetStatement:
+		err = c.Compile(node.Value)
+		sym := c.symbolTable.Define(node.Name.Value)
+		c.emit(code.OpSetGlobal, sym.Index)
 	}
 	return err
 }
