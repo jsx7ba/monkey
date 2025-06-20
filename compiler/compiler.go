@@ -132,6 +132,9 @@ func (c *Compiler) Compile(node ast.Node) error {
 		err = c.Compile(node.Value)
 		sym := c.symbolTable.Define(node.Name.Value)
 		c.emit(code.OpSetGlobal, sym.Index)
+	case *ast.StringLiteral:
+		str := &object.String{Value: node.Value}
+		c.emit(code.OpConstant, c.addConstant(str))
 	}
 	return err
 }

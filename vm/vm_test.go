@@ -58,16 +58,21 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 
 func testExpectedObject(t *testing.T, input string, expected interface{}, actual object.Object) {
 	t.Helper()
-	switch expectedType := expected.(type) {
+	switch e := expected.(type) {
 	case bool:
-		err := testBooleanObject(input, expectedType, actual)
+		err := testBooleanObject(input, e, actual)
 		if err != nil {
 			t.Errorf("testBooleanObject failed: %+v", err)
 		}
 	case int:
-		err := testIntegerObject(int64(expectedType), actual)
+		err := testIntegerObject(int64(e), actual)
 		if err != nil {
 			t.Errorf("[%s] test2IntegerObject failed: %+v", input, err)
+		}
+	case string:
+		err := testStringObject(e, actual)
+		if err != nil {
+			t.Errorf("testStringObject failed: %s", err)
 		}
 	}
 }
@@ -180,6 +185,26 @@ func TestGlobalLetStatements(t *testing.T) {
 		{"let one = 1; one", 1},
 		{"let one = 1; let two = 2; one + two", 3},
 		{"let one = 1; let two = one + one; one + two", 3},
+	}
+	runVmTests(t, tests)
+}
+
+func testStringObject(expected string, actual object.Object) error {
+	result, ok := actual.(*object.String)
+	if !ok {
+		return fmt.Errorf("object is not String, got=%T(%v)", actual, actual)
+	}
+	if result.Value != expected {
+		return fmt.Errorf("object has wrong value. got=%q, want=%q", result, expected)
+	}
+	return nil
+}
+
+func TestStringExpressions(t *testing.T) {
+	tests := []vmTestCase{
+		{`"monkey"`, "monkey"},
+		{`"mon" + "key"`, "monkey"},
+		{`"mon" + "key" + "banana"`, "monkeybanana"},
 	}
 	runVmTests(t, tests)
 }
