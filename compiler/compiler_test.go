@@ -399,3 +399,38 @@ func TestHashliterals(t *testing.T) {
 	}
 	runCompilerTests(t, tests)
 }
+
+func TestIndexExpressions(t *testing.T) {
+	tests := []compilerTestCase{
+		{
+			"[1, 2, 3][1 + 1]",
+			[]interface{}{1, 2, 3, 1, 1},
+			[]code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpArray, 3),
+				code.Make(code.OpConstant, 3),
+				code.Make(code.OpConstant, 4),
+				code.Make(code.OpAdd),
+				code.Make(code.OpIndex),
+				code.Make(code.OpPop),
+			},
+		},
+		{
+			"{1:2}[2-1]",
+			[]interface{}{1, 2, 2, 1},
+			[]code.Instructions{
+				code.Make(code.OpConstant, 0),
+				code.Make(code.OpConstant, 1),
+				code.Make(code.OpHash, 2),
+				code.Make(code.OpConstant, 2),
+				code.Make(code.OpConstant, 3),
+				code.Make(code.OpSub),
+				code.Make(code.OpIndex),
+				code.Make(code.OpPop),
+			},
+		},
+	}
+	runCompilerTests(t, tests)
+}
