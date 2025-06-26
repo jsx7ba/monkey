@@ -10,24 +10,26 @@ import (
 )
 
 type Lexer struct {
-	reader   *bufio.Reader
-	fileName string
-	lineNo   int
-	charNo   int
-	ch       rune // current char under examination
+	reader       *bufio.Reader
+	sourceHandle token.SourceHandle
+	lineNo       uint16
+	charNo       uint16
+	ch           rune // current char under examination
 }
 
 func NewFromString(name, input string) *Lexer {
 	strReader := strings.NewReader(input)
 	r := bufio.NewReader(strReader)
-	l := &Lexer{reader: r, fileName: name, lineNo: 1, charNo: 0}
+	handle := token.AddSource(name)
+	l := &Lexer{reader: r, sourceHandle: handle, lineNo: 1, charNo: 0}
 	l.readChar()
 	return l
 }
 
 func NewFromReader(fileName string, r io.Reader) *Lexer {
 	bufReader := bufio.NewReader(r)
-	l := &Lexer{reader: bufReader, fileName: fileName, lineNo: 1, charNo: 0}
+	handle := token.AddSource(fileName)
+	l := &Lexer{reader: bufReader, sourceHandle: handle, lineNo: 1, charNo: 0}
 	l.readChar()
 	return l
 }
@@ -46,7 +48,7 @@ func (l *Lexer) NextToken() token.Token {
 	l.skipWhitespace()
 	readNextChar := true
 	var tok token.Token
-	lineInfo := token.LineInfo{FileName: l.fileName, Line: l.lineNo, Char: l.charNo}
+	lineInfo := l.sourceHandle.LineInfo(l.lineNo, l.charNo)
 	switch l.ch {
 	case '#':
 		l.skipComment()
