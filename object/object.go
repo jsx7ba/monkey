@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"hash/fnv"
 	"monkey/ast"
+	"monkey/code"
 	"strings"
 )
 
@@ -22,6 +23,7 @@ const (
 	BUILTIN_OBJ
 	ARRAY_OBJ
 	HASH_OBJ
+	COMPILED_FUNCTION_OBJ
 )
 
 func (o ObjectType) String() string {
@@ -49,6 +51,8 @@ func (o ObjectType) String() string {
 		name = "ARRAY"
 	case HASH_OBJ:
 		name = "HASH"
+	case COMPILED_FUNCTION_OBJ:
+		name = "COMPILED_FUNCTION"
 	default:
 		name = "unknown object type"
 	}
@@ -211,4 +215,13 @@ func (ao *Array) Inspect() string {
 	out.WriteString(strings.Join(elements, ", "))
 	out.WriteString("]")
 	return out.String()
+}
+
+type CompiledFunction struct {
+	Instructions code.Instructions
+}
+
+func (cf *CompiledFunction) Type() ObjectType { return COMPILED_FUNCTION_OBJ }
+func (cf *CompiledFunction) Inspect() string {
+	return fmt.Sprintf("CompiledFunction[%p]", cf)
 }
