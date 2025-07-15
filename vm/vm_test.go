@@ -288,3 +288,47 @@ func TestIndexExpressions(t *testing.T) {
 	}
 	runVmTests(t, tests)
 }
+
+func TestCallingFunctionsWithoutArguments(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			`let fivePlusTen = fn() { 5 + 10 }; fivePlusTen()`, 15,
+		},
+		{
+			`let one = fn() { 1; }; let two = fn(){ 2;}; one() + two();`, 3,
+		},
+		{
+			`let a = fn() { 1; }; let b = fn(){ a() + 1;}; let c = fn() { b() + 1 }; c()`, 3,
+		},
+	}
+
+	runVmTests(t, tests)
+}
+
+func TestFunctionsWithReturnStatement(t *testing.T) {
+	tests := []vmTestCase{
+		{`let earlyExit = fn() { return 99; 100; }; earlyExit()`, 99},
+		{`let earlyExit = fn() { return 99; return 100; }; earlyExit()`, 99},
+	}
+	runVmTests(t, tests)
+}
+
+func TestFunctionsWithoutReturnValue(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			`let noReturn = fn() {}`, Null,
+		},
+	}
+	runVmTests(t, tests)
+}
+
+func TestFirstClassFunctions(t *testing.T) {
+	tests := []vmTestCase{
+		{input: `let returnsOne = fn(){ 1; };
+                 let returnsOneReturner = fn() { returnsOne; };
+                 returnsOneReturner()();`,
+			expected: 1,
+		},
+	}
+	runVmTests(t, tests)
+}
