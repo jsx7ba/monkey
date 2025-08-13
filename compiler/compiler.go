@@ -124,7 +124,6 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 		afterAlternativePos := len(c.currentInstructions())
 		c.changeOperand(jumpPos, afterAlternativePos)
-
 	case *ast.BlockStatement:
 		for i := 0; i != len(node.Statements) && err == nil; i++ {
 			err = c.Compile(node.Statements[i])
@@ -191,10 +190,10 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpReturn)
 		}
 
+		numLocals := c.symbolTable.numDefinitions
 		instructions := c.leaveScope()
-		compiledFn := &object.CompiledFunction{Instructions: instructions}
+		compiledFn := &object.CompiledFunction{Instructions: instructions, NumLocals: numLocals}
 		c.emit(code.OpConstant, c.addConstant(compiledFn))
-
 	case *ast.ReturnStatement:
 		err := c.Compile(node.ReturnValue)
 		if err == nil {
@@ -210,7 +209,6 @@ func (c *Compiler) Compile(node ast.Node) error {
 			return err
 		}
 		c.emit(code.OpIndex)
-
 	case *ast.CallExpression:
 		err := c.Compile(node.Function)
 		if err != nil {
