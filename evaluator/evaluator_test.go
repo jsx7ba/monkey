@@ -366,7 +366,7 @@ func TestBuiltinFunction(t *testing.T) {
 		{`len("four")`, 4},
 		{`len("Hello World")`, 11},
 		{`len(1)`, "argument to 'len' not supported, got INTEGER"},
-		{`len("one", "2")`, "wrong number of arguments. got=2, want=1"},
+		{`len("one", "2")`, "wrong number of arguments, got=2, want=1"},
 		{`rest(["one"], "2")`, "wrong number of arguments. got=2, want=1"},
 		{`let x = [1,2,3]; push(x, 4);`, []int64{1, 2, 3, 4}},
 		{`push([1,2], 4, 5);`, "wrong number of arguments. got=3, want=2"},
@@ -402,11 +402,11 @@ func TestBuiltinFunction(t *testing.T) {
 		case string:
 			errObj, ok := evaluated.(*object.Error)
 			if !ok {
-				t.Errorf("object is not Error. got=%T(%+v)", expected, expected)
+				t.Errorf("[%s]: object is not Error. got=%T(%+v)", tt.input, expected, expected)
 				continue
 			}
 			if errObj.Message != expected {
-				t.Errorf("wrong error message, expected=%q, got=%q", expected, errObj.Message)
+				t.Errorf("[%s]: wrong error message, expected=%q, got=%q", tt.input, expected, errObj.Message)
 			}
 		}
 	}

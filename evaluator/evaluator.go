@@ -315,7 +315,7 @@ func evalIdentifier(node *ast.Identifier, env *object.Environment) object.Object
 		return val
 	}
 
-	if builtin, ok := builtins[node.Value]; ok {
+	if builtin, ok := object.Builtins[node.Value]; ok {
 		return builtin
 	}
 	return newError("%s: identifier not found: %s", node.Token.LineInfo, node.Value)
