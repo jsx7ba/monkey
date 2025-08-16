@@ -24,6 +24,11 @@ type Compiler struct {
 }
 
 func New() *Compiler {
+	symbolTable := NewSymbolTable()
+	for i, k := range object.Builtins {
+		symbolTable.DefineBuiltin(i, k.Name)
+	}
+
 	mainScope := CompilationScope{
 		instructions:        code.Instructions{},
 		lastInstruction:     EmittedInstruction{},
@@ -35,7 +40,7 @@ func New() *Compiler {
 		constants:           []object.Object{},
 		lastInstruction:     EmittedInstruction{},
 		previousInstruction: EmittedInstruction{},
-		symbolTable:         NewSymbolTable(),
+		symbolTable:         symbolTable,
 		scopes:              []CompilationScope{mainScope},
 		scopeIndex:          0,
 	}
@@ -132,11 +137,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 		sym, ok := c.symbolTable.Resolve(node.Value)
 		if !ok {
 			err = fmt.Errorf("undefined variable %s", node.Value)
-		}
-		if sym.Scope == GlobalScope {
-			c.emit(code.OpGetGlobal, sym.Index)
 		} else {
-			c.emit(code.OpGetLocal, sym.Index)
+			c.loadSymbol(sym)
 		}
 	case *ast.LetStatement:
 		err = c.Compile(node.Value)
@@ -368,6 +370,17 @@ func (c *Compiler) leaveScope() code.Instructions {
 	c.scopeIndex--
 	c.symbolTable = c.symbolTable.outer
 	return instructions
+}
+
+func (c *Compiler) loadSymbol(s Symbol) {
+	switch s.Scope {
+	case GlobalScope:
+		c.emit(code.OpGetGlobal, s.Index)
+	case LocalScope:
+		c.emit(code.OpGetLocal, s.Index)
+	case BuiltinScope:
+		c.emit(code.OpGetBuiltin, s.Index)
+	}
 }
 
 type Bytecode struct {

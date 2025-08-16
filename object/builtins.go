@@ -14,15 +14,18 @@ var (
 	FALSE = &Boolean{Value: false}
 )
 
-var Builtins = map[string]*Builtin{
-	"len":   {Fn: length},
-	"puts":  {Fn: puts},
-	"first": {Fn: first},
-	"last":  {Fn: last},
-	"push":  {Fn: push},
-	"rest":  {Fn: rest},
-	"exec":  {Fn: execFn},
-	"cmp":   {Fn: cmpFn},
+var Builtins = []struct {
+	Name    string
+	Builtin *Builtin
+}{
+	{"len", &Builtin{Fn: length}},
+	{"puts", &Builtin{Fn: puts, Void: true}},
+	{"first", &Builtin{Fn: first}},
+	{"last", &Builtin{Fn: last}},
+	{"rest", &Builtin{Fn: rest}},
+	{"push", &Builtin{Fn: push}},
+	{"exec", &Builtin{Fn: execFn}},
+	{"cmp", &Builtin{Fn: cmpFn}},
 }
 
 func length(args ...Object) Object {
@@ -166,9 +169,10 @@ func newError(format string, a ...interface{}) *Error {
 }
 
 func GetBuiltinByName(name string) *Builtin {
-	fn, ok := Builtins[name]
-	if ok {
-		return fn
+	for _, bi := range Builtins {
+		if bi.Name == name {
+			return bi.Builtin
+		}
 	}
 	return nil
 }
