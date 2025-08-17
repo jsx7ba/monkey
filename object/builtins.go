@@ -92,7 +92,7 @@ func push(args ...Object) Object {
 		return newError("wrong number of arguments. got=%d, want=2", len(args))
 	}
 	if args[0].Type() != ARRAY_OBJ {
-		return newError("argument to `push` must be ARRAY, got %s", args[0].Type())
+		return newError("argument to 'push' must be ARRAY, got %s", args[0].Type())
 	}
 
 	arr := args[0].(*Array)
@@ -105,7 +105,7 @@ func checkArray(name string, args []Object) (Object, bool) {
 		return newError("wrong number of arguments. got=%d, want=1", len(args)), false
 	}
 	if args[0].Type() != ARRAY_OBJ {
-		return newError("argument to '%s' must be an array, got %s", name, args[0].Type()), false
+		return newError("argument to '%s' must be ARRAY, got %s", name, args[0].Type()), false
 	}
 
 	return nil, true
