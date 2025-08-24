@@ -26,7 +26,8 @@ type VM struct {
 
 func New(bytecode *compiler.Bytecode) *VM {
 	mainFn := &object.CompiledFunction{Instructions: bytecode.Instructions}
-	mainFrame := NewFrame(mainFn, 0)
+	mainClosure := &object.Closure{Fn: mainFn}
+	mainFrame := NewFrame(mainClosure, 0)
 
 	frames := make([]*Frame, MaxFrames)
 	frames[0] = mainFrame
@@ -152,22 +153,17 @@ func (vm *VM) Run() error {
 			vm.currentFrame().ip += 1
 			def := object.Builtins[index]
 			err = vm.push(def.Builtin)
+		case code.OpClosure:
+			constIndex := code.ReadUint16(ins[ip+1:])
+			_ = code.ReadUint8(ins[ip+3:])
+			vm.currentFrame().ip += 3
+			err = vm.pushClosure(int(constIndex))
 		}
 
 		if err != nil {
 			return err
 		}
 	}
-	return nil
-}
-
-func (vm *VM) callFunction(fn *object.CompiledFunction, numArgs int) error {
-	if numArgs != fn.NumParameters {
-		return fmt.Errorf("wrong number of arguments: want=%d, got=%d", fn.NumParameters, numArgs)
-	}
-	frame := NewFrame(fn, vm.sp-numArgs)
-	vm.pushFrame(frame)
-	vm.sp = frame.basePointer + fn.NumLocals
 	return nil
 }
 
@@ -388,8 +384,8 @@ func (vm *VM) popFrame() *Frame {
 func (vm *VM) executeCall(numArgs int) error {
 	callee := vm.stack[vm.sp-1-numArgs]
 	switch calleeType := callee.(type) {
-	case *object.CompiledFunction:
-		return vm.callFunction(calleeType, numArgs)
+	case *object.Closure:
+		return vm.callClosure(calleeType, numArgs)
 	case *object.Builtin:
 		return vm.callBuiltin(calleeType, numArgs)
 	default:
@@ -409,4 +405,24 @@ func (vm *VM) callBuiltin(builtin *object.Builtin, numArgs int) error {
 		}
 	}
 	return nil
+}
+
+func (vm *VM) callClosure(cl *object.Closure, numArgs int) error {
+	if numArgs != cl.Fn.NumParameters {
+		return fmt.Errorf("wrong number of arguments: want=%d, got=%d", cl.Fn.NumParameters, numArgs)
+	}
+	frame := NewFrame(cl, vm.sp-numArgs)
+	vm.pushFrame(frame)
+	vm.sp = frame.basePointer + cl.Fn.NumLocals
+	return nil
+}
+
+func (vm *VM) pushClosure(constIndex int) error {
+	constant := vm.constants[constIndex]
+	function, ok := constant.(*object.CompiledFunction)
+	if !ok {
+		return fmt.Errorf("not a function: %+v", constant)
+	}
+	closure := &object.Closure{Fn: function}
+	return vm.push(closure)
 }
