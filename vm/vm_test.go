@@ -53,6 +53,17 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 		stackElem := vm.LastPoppedStackElem()
 		testExpectedObject(t, tt.input, tt.expected, stackElem)
 
+		for i, constant := range comp.Bytecode().Constants {
+			fmt.Printf("CONSTANT %d %p (%T): \n", i, constant, constant)
+			switch c := constant.(type) {
+			case *object.CompiledFunction:
+				fmt.Printf("Instructions:\n%s", c.Instructions)
+			case *object.Integer:
+				fmt.Printf("Value:\n%d", c.Value)
+			}
+			fmt.Println()
+		}
+
 	}
 }
 
@@ -514,5 +525,32 @@ func TestClosures(t *testing.T) {
 			99,
 		},
 	}
+	runVmTests(t, tests)
+}
+
+func TestRecursiveFunctions(t *testing.T) {
+	tests := []vmTestCase{
+		{
+			`let countDown = fn(x) { 
+					if (x == 0) { return 0; } else { countDown(x -1); } 
+                   };
+				countDown(1);`,
+			0,
+		},
+		{
+			`let countDown = fn(x) { if (x == 0) { return 0; } else { countDown(x -1); } };
+					let wrapper = fn() { countDown(1); };
+					wrapper();`,
+			0,
+		},
+		{
+			`let wrapper = fn() {
+						let countDown = fn(x) { if (x == 0) { return 0; } else { countDown(x - 1); } }; 
+					countDown(1); }; 
+                    wrapper(); `,
+			0,
+		},
+	}
+
 	runVmTests(t, tests)
 }

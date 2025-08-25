@@ -163,6 +163,9 @@ func (vm *VM) Run() error {
 			vm.currentFrame().ip += 1
 			currentClosure := vm.currentFrame().cl
 			err = vm.push(currentClosure.Free[freeIndex])
+		case code.OpCurrentClosure:
+			currentClosure := vm.currentFrame().cl
+			err = vm.push(currentClosure)
 		}
 
 		if err != nil {

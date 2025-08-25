@@ -141,8 +141,12 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.loadSymbol(sym)
 		}
 	case *ast.LetStatement:
-		err = c.Compile(node.Value)
 		sym := c.symbolTable.Define(node.Name.Value)
+		err = c.Compile(node.Value)
+		if err != nil {
+			return err
+		}
+
 		if sym.Scope == GlobalScope {
 			c.emit(code.OpSetGlobal, sym.Index)
 		} else {
@@ -180,6 +184,11 @@ func (c *Compiler) Compile(node ast.Node) error {
 		c.emit(code.OpHash, len(node.Pairs)*2)
 	case *ast.FunctionLiteral:
 		c.enterScope()
+
+		if node.Name != "" {
+			c.symbolTable.DefineFunctionName(node.Name)
+		}
+
 		for _, p := range node.Parameters {
 			c.symbolTable.Define(p.Value)
 		}
@@ -390,6 +399,8 @@ func (c *Compiler) loadSymbol(s Symbol) {
 		c.emit(code.OpGetBuiltin, s.Index)
 	case FreeScope:
 		c.emit(code.OpGetFree, s.Index)
+	case FunctionScope:
+		c.emit(code.OpCurrentClosure)
 	}
 }
 
